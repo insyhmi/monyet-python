@@ -2,9 +2,14 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from openai import OpenAI
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 app = FastAPI()
 
-OpenAI.api_key = "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"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Format for the current task
 class TaskInput(BaseModel):
