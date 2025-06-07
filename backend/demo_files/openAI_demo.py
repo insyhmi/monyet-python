@@ -70,11 +70,11 @@ def is_procrastinating(main_task: str, current_activity: str, threshold: float =
 #################
 
 # Task at hand
-task = "Researching exercise routines"
+task = "League of Legends team practice"
 
 # List of activities to compare to
 activities = [
-    "HIIT Guide 2025 - Google Docs",  
+    "MOBA Tier List 2025",  
     "Watching YouTube tutorials on push-ups",  
     "Sleep schedules",
     "How to bake - YouTube"  
