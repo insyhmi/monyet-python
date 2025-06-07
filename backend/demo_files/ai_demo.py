@@ -2,6 +2,10 @@ from openai import OpenAI
 from typing import Tuple
 import numpy as np
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 #############
 """
@@ -9,9 +13,7 @@ Demo with OpenAI API for checking the similarity of tasks
 
 """
 
-
-
-client = OpenAI(api_key="")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def get_contextual_embedding(text: str, context: str = "") -> np.ndarray:
     """Enhanced embedding format with task context"""
