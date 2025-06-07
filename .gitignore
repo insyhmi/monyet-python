@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Electron binaries
+*.exe
+*.dll
+*.app
+*.deb
+*.rpm
+*.snap
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment files
+.env
+
+# IDE/editor config
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+node_modules/
