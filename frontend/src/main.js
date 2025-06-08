@@ -26,30 +26,37 @@ function createWindow() {
 // 🧠 Active Window Tracking
 let intervalId;
 
-ipcMain.handle('start-tracking', async () => {
+ipcMain.handle('start-tracking', async (event, task) => {
   if (intervalId) return;
 
   intervalId = setInterval(async () => {
     try {
-      const result = await activeWin();
-      console.log("Detected active window:", result);
+      console.log("Current goal is", task);
+      const activity = await activeWin();
+      console.log("Detected active window:", activity);
 
       // 🚀 Send active window title to FastAPI backend
       const response = await fetch('http://localhost:8000/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          current_task: "writing code", // <-- Replace or update with user input if needed
-          current_window: result.title || result.owner?.name || "Unknown"
+          current_task: task,
+          current_window: activity.title || activity.owner?.name || "Unknown"
         }),
       });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("FastAPI returned an error:", text);
+        return;
+      }
 
       const responseData = await response.json();
       console.log("Backend response:", responseData);
 
       // Send window data to renderer (frontend)
       if (win && win.webContents && !win.webContents.isDestroyed()) {
-        win.webContents.send('active-window-data', result);
+        win.webContents.send('active-window-data', { activeWindow: activity, analysis: responseData });
       }
     } catch (err) {
       console.error("Error in tracking:", err);

@@ -15,7 +15,7 @@ if not api_key:
 
 genai.configure(api_key=api_key, transport="rest")  # Get from https://aistudio.google.com/app/apikey
 
-for model in genai.list_models():
+for model in genai.list_models(): 
     print(model.name, model.supported_generation_methods)
 
 
@@ -79,10 +79,10 @@ task = "Doing maths"
 # List of activities to compare to
 activities = [
     "Desmos",
-    "Google Docs - Principles"
+    "YouTube - Studying John Rawls until I fucking faint"
 ]
 
-# for activity in activities:
-#     isprocrastinating, score = analyze_task_alignment(task, activity)
-#     print(f"Task: '{task}' vs Activity: '{activity}'")
-#     print(f"Similarity: {score:.2f} -> {'DISTRACTION' if isprocrastinating else 'ON TASK'}\n")
+"""for activity in activities:
+     isprocrastinating, score = analyze_task_alignment(task, activity)
+     print(f"Task: '{task}' vs Activity: '{activity}'")
+     print(f"Similarity: {score:.2f} -> {'DISTRACTION' if isprocrastinating else 'ON TASK'}\n")"""

@@ -9,7 +9,7 @@
     <h1>Hello, Procrastinator!</h1>
     <p>Focus detected soon...</p>
     <p>Name your current task: </p>
-    <input id = "task">
+    <input id="task">
     <button id="start">Start Tracking</button>
     <button id="stop">Stop Tracking</button>
     <pre id="output"></pre>
@@ -22,7 +22,15 @@
 
       // Sends request to track
       document.getElementById('start').onclick = async () => {
-        window.api.startTracking();
+        // Gets task input
+        const taskInput = document.getElementById('task').value.trim();
+        if (!taskInput) {
+          alert("Please enter your current task before starting tracking.");
+          return;
+        }
+
+        // Sends the task to start tracking
+        window.api.startTracking(taskInput);
         output.textContent = 'Started tracking...';
       };
       
@@ -33,26 +41,39 @@
       };
 
 
-      window.api.onWindowData(async (data) => {
-        if (!data || !data.owner || !data.owner.name) return;
+      window.api.onWindowData(({ activeWindow, analysis }) => {
+        // No active window
+        if (!activeWindow || !activeWindow.owner || !activeWindow.owner.name) return;
 
-        const appName = data.owner.name;
+        const appName = activeWindow.owner.name;
         const timestamp = new Date().toLocaleString();
 
+        // Array version
         if (!activityLog[appName]) {
           activityLog[appName] = [];
         }
 
         activityLog[appName].push({
-          title: data.title || 'No title',
-          url: data.url || 'N/A',
+          title: activeWindow.title || 'No title',
+          url: activeWindow.url || 'N/A',
           time: timestamp
+        });
+
+
+        // Show latest app data
+        const appData = {
+          title: activeWindow.title || "No title",
+          url: activeWindow.url || 'N/A',
+        };
+
+        output.textContent = JSON.stringify(appData, null, 2);
+        // Procrastination analysis
+        procrastinationLabel.textContent = analysis.isProcrastinating
+          ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
+          : `Productive (score: ${analysis.score.toFixed(2)})`;
       });
 
 
-        // Show the entire dictionary nicely
-        //output.textContent = JSON.stringify(activityLog, null, 2);
-      });
     </script>
   </body>
 </html>
