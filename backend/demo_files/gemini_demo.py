@@ -61,7 +61,7 @@ def analyze_task_alignment(main_task: str, current_activity: str) -> tuple[bool,
     
     Provide ONLY a float (0-1) where 1=perfect alignment:"""
     
-    model = genai.GenerativeModel("gemini-1.5-pro-latest")
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
     response = model.generate_content(prompt)
     try:
         llm_score = min(max(float(response.text.strip()), 0.0), 1.0)  # Clamp to 0-1
@@ -82,8 +82,7 @@ activities = [
     "Google Docs - Principles"
 ]
 
-for activity in activities:
-    isprocrastinating, score = analyze_task_alignment(task, activity)
-    print(f"Task: '{task}' vs Activity: '{activity}'")
-    print(f"Similarity: {score:.2f} -> {'DISTRACTION' if isprocrastinating else 'ON TASK'}\n")
-.65
+# for activity in activities:
+#     isprocrastinating, score = analyze_task_alignment(task, activity)
+#     print(f"Task: '{task}' vs Activity: '{activity}'")
+#     print(f"Similarity: {score:.2f} -> {'DISTRACTION' if isprocrastinating else 'ON TASK'}\n")
