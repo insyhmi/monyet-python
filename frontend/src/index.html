@@ -1,3 +1,5 @@
+<!--Use active-win system for tracking current tabs-->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -6,5 +8,51 @@
   <body>
     <h1>Hello, Procrastinator!</h1>
     <p>Focus detected soon...</p>
+    <p>Name your current task: </p>
+    <input id = "task">
+    <button id="start">Start Tracking</button>
+    <button id="stop">Stop Tracking</button>
+    <pre id="output"></pre>
+    <pre id="procrastination-label"></pre>
+
+    <script>
+      const output = document.getElementById('output');
+      const procrastinationLabel = document.getElementById('procrastination-label');
+      const activityLog = {}; // Dictionary to store activity by app name
+
+      // Sends request to track
+      document.getElementById('start').onclick = async () => {
+        window.api.startTracking();
+        output.textContent = 'Started tracking...';
+      };
+      
+      // Sends request to stop tracking
+      document.getElementById('stop').onclick = () => {
+        window.api.stopTracking();
+        output.textContent = 'Stopped tracking.';
+      };
+
+
+      window.api.onWindowData(async (data) => {
+        if (!data || !data.owner || !data.owner.name) return;
+
+        const appName = data.owner.name;
+        const timestamp = new Date().toLocaleString();
+
+        if (!activityLog[appName]) {
+          activityLog[appName] = [];
+        }
+
+        activityLog[appName].push({
+          title: data.title || 'No title',
+          url: data.url || 'N/A',
+          time: timestamp
+      });
+
+
+        // Show the entire dictionary nicely
+        //output.textContent = JSON.stringify(activityLog, null, 2);
+      });
+    </script>
   </body>
 </html>
