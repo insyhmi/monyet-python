@@ -12,5 +12,8 @@
   "description": "",
   "devDependencies": {
     "electron": "^36.4.0"
+  },
+  "dependencies": {
+    "active-win": "^8.2.1"
   }
 }

@@ -57,6 +57,7 @@ def analyze_task_alignment(main_task: str, current_activity: str) -> tuple[bool,
     - Direct relevance (e.g. 'coding' vs 'IDE')
     - Indirect benefits (e.g. 'research' vs 'reading papers')
     - Common distractions
+    - The features of the website or application involved
     
     Provide ONLY a float (0-1) where 1=perfect alignment:"""
     
@@ -73,14 +74,12 @@ def analyze_task_alignment(main_task: str, current_activity: str) -> tuple[bool,
 
 
 # Task at hand
-task = "League of Legends team practice"
+task = "Doing maths"
 
 # List of activities to compare to
 activities = [
-    "YouTube - MOBA Gameplay",  
-    "Watching YouTube tutorials on push-ups",  
-    "Practice League of Legends",
-    "DOTA 2"
+    "Desmos",
+    "Google Docs - Principles"
 ]
 
 for activity in activities:
