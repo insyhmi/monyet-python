@@ -16,39 +16,40 @@
     <pre id="procrastination-label"></pre>
 
     <script>
-      const output = document.getElementById('output');
-      const procrastinationLabel = document.getElementById('procrastination-label');
-      const activityLog = {}; // Dictionary to store activity by app name
+        const output = document.getElementById('output');
+        const procrastinationLabel = document.getElementById('procrastination-label');
+        const activityLog = {}; // Dictionary to store activity by app name
 
-      // Sends request to track
-      document.getElementById('start').onclick = async () => {
+        document.getElementById('start').onclick = async () => {
+        let user_task = document.getElementById('task').value;
+        window.api.sendTask(user_task);
         window.api.startTracking();
         output.textContent = 'Started tracking...';
-      };
-      
-      // Sends request to stop tracking
-      document.getElementById('stop').onclick = () => {
+        };
+        
+        // Sends request to stop tracking
+        document.getElementById('stop').onclick = () => {
         window.api.stopTracking();
         output.textContent = 'Stopped tracking.';
-      };
+        };
 
 
-      window.api.onWindowData(async (data) => {
+        window.api.onWindowData(async (data) => {
+        console.log((data));
         if (!data || !data.owner || !data.owner.name) return;
 
         const appName = data.owner.name;
         const timestamp = new Date().toLocaleString();
 
         if (!activityLog[appName]) {
-          activityLog[appName] = [];
+            activityLog[appName] = [];
         }
 
         activityLog[appName].push({
-          title: data.title || 'No title',
-          url: data.url || 'N/A',
-          time: timestamp
-      });
-
+            title: data.title || 'No title',
+            url: data.url || 'N/A',
+            time: timestamp
+        });
 
         // Show the entire dictionary nicely
         //output.textContent = JSON.stringify(activityLog, null, 2);

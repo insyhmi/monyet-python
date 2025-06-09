@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const activeWin = require('active-win');
 const path = require('path');
 
@@ -6,6 +6,8 @@ const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 let win;
+let user_task = "";
+let wasProcrastinating = false;
 
 function createWindow() {
   console.log('Creating browser window...');
@@ -26,6 +28,11 @@ function createWindow() {
 // 🧠 Active Window Tracking
 let intervalId;
 
+ipcMain.on('task-value', (event, taskValue) => {
+  console.log("Received input value from renderer:", taskValue);
+  user_task = taskValue;
+});
+
 ipcMain.handle('start-tracking', async () => {
   if (intervalId) return;
 
@@ -39,22 +46,39 @@ ipcMain.handle('start-tracking', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          current_task: "writing code", // <-- Replace or update with user input if needed
+          current_task: user_task, 
           current_window: result.title || result.owner?.name || "Unknown"
         }),
       });
 
-      const responseData = await response.json();
-      console.log("Backend response:", responseData);
+        const responseData = await response.json();
+        console.log("Backend response:", responseData);
 
-      // Send window data to renderer (frontend)
-      if (win && win.webContents && !win.webContents.isDestroyed()) {
+        if (win && win.webContents && !win.webContents.isDestroyed()) {
         win.webContents.send('active-window-data', result);
-      }
+        win.webContents.send('backend-result', responseData);
+        }
+
+        // Check if the user is now procrastinating, and wasn't before
+        if (responseData.isProcrastinating && !wasProcrastinating) {
+            new Notification({
+                title: 'Focus Alert 🚨',
+                body: `You're currently off-task: ${responseData.current_window}`,
+            }).show();
+
+            wasProcrastinating = true;
+        } else if (!responseData.isProcrastinating) {
+            // Reset flag when user is back on task
+            wasProcrastinating = false;
+        }
     } catch (err) {
       console.error("Error in tracking:", err);
     }
-  }, 10000); // Interval in miliseconds
+  }, 5000); // Interval in miliseconds
+});
+
+ipcMain.on('notify-test', (event, { title, body }) => {
+    notify(title, body);
 });
 
 ipcMain.on('stop-tracking', () => {
@@ -63,6 +87,14 @@ ipcMain.on('stop-tracking', () => {
     intervalId = null;
   }
 });
+
+function notify(title, body){
+    new Notification({
+        title : title,
+        body : body,
+        icon : 'https://upload.wikimedia.org/wikipedia/en/9/9c/George_Floyd.png'
+    }).show();
+}
 
 app.whenReady().then(() => {
   createWindow();
