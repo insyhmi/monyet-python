@@ -70,8 +70,6 @@ async def calculate_score_data(app_data: AppData):
     Thirty-In-A-Row (5 mins) productivity log = +2.0PT
 
     """
-
-
     entries = app_data.data
 
     INTERVAL = 10  # Each entry is 10 seconds
@@ -88,8 +86,9 @@ async def calculate_score_data(app_data: AppData):
     procrastinating = False
 
     for i, entry in enumerate(entries):
+        # Procrastination log found
         if entry.procrastinating:
-            procrastinating += 1
+            procrastinating = True
             procrastination_chain += 1
             is_isolated = (
                 (i == 0 or not entries[i - 1].procrastinating) and
