@@ -16,50 +16,43 @@
     <pre id="procrastination-label"></pre>
 
     <script>
-      const output = document.getElementById('output');
-      const procrastinationLabel = document.getElementById('procrastination-label');
-      const activityLog = {}; // Dictionary to store activity by app name
+        const output = document.getElementById('output');
+        const procrastinationLabel = document.getElementById('procrastination-label');
+        const activityLog = {}; // Dictionary to store activity by app name
+     
+        document.getElementById('start').onclick = async () => {
+          const taskInput = document.getElementById('task').value.trim();
+          if (!taskInput) {
+            alert("Please enter your current task before starting tracking.");
+            return;
+          }
+          window.api.startTracking(taskInput);
 
-      // Sends request to track
-      document.getElementById('start').onclick = async () => {
-        // Gets task input
-        const taskInput = document.getElementById('task').value.trim();
-        if (!taskInput) {
-          alert("Please enter your current task before starting tracking.");
-          return;
-        }
-
-        // Sends the task to start tracking
-        window.api.startTracking(taskInput);
         output.textContent = 'Started tracking...';
-      };
-      
-      // Sends request to stop tracking
-      document.getElementById('stop').onclick = () => {
-        window.api.stopTracking();
-        output.textContent = 'Stopped tracking.';
-      };
+        };
+        
+        // Sends request to stop tracking
+        document.getElementById('stop').onclick = () => {
+          window.api.stopTracking();
+          output.textContent = 'Stopped tracking.';
+        };
 
+        window.api.onWindowData(async (data) => {
+          console.log((data));
+          if (!data || !data.owner || !data.owner.name) return;
 
-      window.api.onWindowData(({ activeWindow, analysis }) => {
-        // No active window
-        if (!activeWindow || !activeWindow.owner || !activeWindow.owner.name) return;
+          const appName = activeWindow.owner.name;
+          const timestamp = new Date().toLocaleString();
 
-        const appName = activeWindow.owner.name;
-        const timestamp = new Date().toLocaleString();
-
-        // Array version
-        if (!activityLog[appName]) {
-          activityLog[appName] = [];
-        }
-
-        activityLog[appName].push({
-          title: activeWindow.title || 'No title',
-          url: activeWindow.url || 'N/A',
-          time: timestamp
+          // Array version
+          if (!activityLog[appName]) {
+              activityLog[appName] = [];
+          }
+          activityLog[appName].push({
+            title: data.title || 'No title',
+            url: data.url || 'N/A',
+            time: timestamp
         });
-
-
         // Show latest app data
         const appData = {
           title: activeWindow.title || "No title",

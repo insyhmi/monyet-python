@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
+import json
 import subprocess
 from dotenv import load_dotenv
 from demo_files import gemini_demo
@@ -35,6 +35,20 @@ async def check_focus(request: Request):
     # Set data
     task = data['current_task']
     activity = data['current_window']
+
+    isprocrastinating, score = gemini_demo.analyze_task_alignment(task, activity)
+    isprocrastinating = bool (isprocrastinating)
+    score = float(score)
+    print(f"Gemini Procrastination Analysis -> isProcrastinating: {isprocrastinating}, score: {score}")
+    return {
+        "status": "ok",
+        "current_task" : task,
+        "current_window" : activity,
+        "score" : score,
+        "isProcrastinating" : isprocrastinating
+        }
+
+
 
     # Gets similarity of tasks
     isProcrastinating, score = gemini_demo.analyze_task_alignment(task, activity)
