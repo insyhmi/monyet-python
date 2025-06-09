@@ -32,7 +32,7 @@ class AppEntry(BaseModel):
 
 class AppData(BaseModel):
     data: List[AppEntry]
-
+      
 
 @app.post("/check")
 
