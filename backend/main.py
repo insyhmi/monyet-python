@@ -39,7 +39,6 @@ class AppData(BaseModel):
 async def check_focus(request: Request):
     data = await request.json()
     print("Received data at /check:", data)
-
     # Set data
     task = data['current_task']
     activity = data['current_window']
