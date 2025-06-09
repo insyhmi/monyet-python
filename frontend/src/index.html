@@ -9,7 +9,7 @@
     <h1>Hello, Procrastinator!</h1>
     <p>Focus detected soon...</p>
     <p>Name your current task: </p>
-    <input id = "task">
+    <input id="task">
     <button id="start">Start Tracking</button>
     <button id="stop">Stop Tracking</button>
     <pre id="output"></pre>
@@ -19,41 +19,54 @@
         const output = document.getElementById('output');
         const procrastinationLabel = document.getElementById('procrastination-label');
         const activityLog = {}; // Dictionary to store activity by app name
-
+     
         document.getElementById('start').onclick = async () => {
-        let user_task = document.getElementById('task').value;
-        window.api.sendTask(user_task);
-        window.api.startTracking();
+          const taskInput = document.getElementById('task').value.trim();
+          if (!taskInput) {
+            alert("Please enter your current task before starting tracking.");
+            return;
+          }
+          window.api.startTracking(taskInput);
+
         output.textContent = 'Started tracking...';
         };
         
         // Sends request to stop tracking
         document.getElementById('stop').onclick = () => {
-        window.api.stopTracking();
-        output.textContent = 'Stopped tracking.';
+          window.api.stopTracking();
+          output.textContent = 'Stopped tracking.';
         };
 
-
         window.api.onWindowData(async (data) => {
-        console.log((data));
-        if (!data || !data.owner || !data.owner.name) return;
+          console.log((data));
+          if (!data || !data.owner || !data.owner.name) return;
 
-        const appName = data.owner.name;
-        const timestamp = new Date().toLocaleString();
+          const appName = activeWindow.owner.name;
+          const timestamp = new Date().toLocaleString();
 
-        if (!activityLog[appName]) {
-            activityLog[appName] = [];
-        }
-
-        activityLog[appName].push({
+          // Array version
+          if (!activityLog[appName]) {
+              activityLog[appName] = [];
+          }
+          activityLog[appName].push({
             title: data.title || 'No title',
             url: data.url || 'N/A',
             time: timestamp
         });
+        // Show latest app data
+        const appData = {
+          title: activeWindow.title || "No title",
+          url: activeWindow.url || 'N/A',
+        };
 
-        // Show the entire dictionary nicely
-        //output.textContent = JSON.stringify(activityLog, null, 2);
+        output.textContent = JSON.stringify(appData, null, 2);
+        // Procrastination analysis
+        procrastinationLabel.textContent = analysis.isProcrastinating
+          ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
+          : `Productive (score: ${analysis.score.toFixed(2)})`;
       });
+
+
     </script>
   </body>
 </html>

@@ -28,24 +28,21 @@ function createWindow() {
 // 🧠 Active Window Tracking
 let intervalId;
 
-ipcMain.on('task-value', (event, taskValue) => {
-  console.log("Received input value from renderer:", taskValue);
-  user_task = taskValue;
-});
-
-ipcMain.handle('start-tracking', async () => {
+ipcMain.handle('start-tracking', async (event, task) => {
   if (intervalId) return;
 
   intervalId = setInterval(async () => {
     try {
-      const result = await activeWin();
-      console.log("Detected active window:", result);
+      console.log("Current goal is", task);
+      const activity = await activeWin();
+      console.log("Detected active window:", activity);
 
       // 🚀 Send active window title to FastAPI backend
       const response = await fetch('http://localhost:8000/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+
           current_task: user_task, 
           current_window: result.title || result.owner?.name || "Unknown"
         }),
@@ -92,7 +89,6 @@ function notify(title, body){
     new Notification({
         title : title,
         body : body,
-        icon : 'https://upload.wikimedia.org/wikipedia/en/9/9c/George_Floyd.png'
     }).show();
 }
 

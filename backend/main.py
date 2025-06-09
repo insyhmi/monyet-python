@@ -10,6 +10,7 @@ import os
 
 load_dotenv()
 
+# CORS
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -30,9 +31,11 @@ class TaskInput(BaseModel):
 async def check_focus(request: Request):
     data = await request.json()
     print("Received data at /check:", data)
-    #print(type(data))
+
+    # Set data
     task = data['current_task']
     activity = data['current_window']
+
     isprocrastinating, score = gemini_demo.analyze_task_alignment(task, activity)
     isprocrastinating = bool (isprocrastinating)
     score = float(score)
@@ -46,17 +49,18 @@ async def check_focus(request: Request):
         }
 
 
-def check_focus(data: TaskInput):
-    """
-    Checks whether the current user task is related to the overall goal.
 
-    """
-    
-    task = data.current_task.strip().lower()
-    window = data.current_window.strip().lower()
+    # Gets similarity of tasks
+    isProcrastinating, score = gemini_demo.analyze_task_alignment(task, activity)
+    print(f"Gemini Procrastination Analysis -> {"Procrastinating" if isProcrastinating else "Productive"}, score: {score}")
 
-    is_procrastinating = task not in window
 
-    
+    return {
+        "status": "ok",
+        "received": data,
+        "isProcrastinating": bool(isProcrastinating),
+        "score": float(score)
+    }
+
 
 print("FastAPI app is initialized:", app)
