@@ -38,8 +38,7 @@ ipcMain.handle('start-tracking', async (event, task) => {
       console.log("Current goal is", task);
       const activity = await activeWin();
       console.log("Detected active window:", activity);
-
-      // 🚀 Send active window title to FastAPI backend
+      // Send active window title to FastAPI backend
       const response = await fetch('http://localhost:8000/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,7 +72,7 @@ ipcMain.handle('start-tracking', async (event, task) => {
     } catch (err) {
       console.error("Error in tracking:", err);
     }
-  }, 5000); // Interval in miliseconds
+  }, 10000); // Interval in miliseconds
 });
 
 ipcMain.on('notify-test', (event, { title, body }) => {

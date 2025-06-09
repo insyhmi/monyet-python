@@ -25,7 +25,6 @@ class TaskInput(BaseModel):
     current_task: str
     current_window: str
 
-
 @app.post("/check")
 
 async def check_focus(request: Request):
