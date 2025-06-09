@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sisyphus</title>
+</head>
+<body>
+  <h1>Sisyphus.</h1>
+  <form id="setupForm">
+
+    <h3>Focus Setting</h3>
+    <label>
+      Focus length (minutes) *<br/>
+      <input type="number" id="work-time" min="1" required />
+    </label>
+
+    <label>
+      Break length (minutes) *<br/>
+      <input type="number" id="rest-time" />
+    </label>
+
+    <label>
+      Focus intervals (number of repetitions) *<br/>
+      <input type="number" id="intervals" min="1" required />
+    </label>
+
+    <br> <br>
+
+    <h3>Activity Setting</h3>
+    <label>
+      Activity Done *<br/>
+      <input type="text" id="activity" required />
+    </label>
+
+    <label>
+      Whitelisted Websites (one per line)<br/>
+      <textarea id="whitelist" rows="5" placeholder="e.g. example.com"></textarea>
+    </label>
+
+    <button type="submit">Start Tracking</button>
+  </form>
+
+  <script>
+    const { ipcRenderer } = window.api || require('electron').ipcRenderer;
+
+    document.getElementById('setupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const workTime = Number(document.getElementById('work-time').value.trim());
+      const restTime = Number(document.getElementById('rest-time').value.trim());
+      const intervals = Number(document.getElementById('intervals').value.trim());
+      const activity = document.getElementById('activity').value.trim();
+      const whitelistRaw = document.getElementById('whitelist').value.trim();
+
+      if (!workTime || !intervals || !activity) {
+        alert('Please fill in the mandatory fields.');
+        return;
+      }
+
+      // Focus period
+      const focusPeriod = {
+        focus_length: workTime, 
+        break_length: restTime ? restTime : 0,
+        interval: intervals ? intervals : 0 
+      }
+
+      // Whitelisted websites
+      const whitelist = whitelistRaw
+        ? whitelistRaw.split('\n').map(site => site.trim()).filter(Boolean)
+        : [];
+
+      try {
+          window.api.saveSetupData({ focusPeriod, activity, whitelist });
+          window.api.loadMainWindow();
+      } catch (err) {
+          alert('Error saving data: ' + err.message);
+      };
+    });
+
+
+  </script>
+</body>
+</html>

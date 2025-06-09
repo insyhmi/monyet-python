@@ -9,13 +9,59 @@
     <h1>Hello, Procrastinator!</h1>
     <p>Focus detected soon...</p>
     <p>Name your current task: </p>
-    <input id="task">
+
+    <div id="settings-display"></div>
+    <br>
+
     <button id="start">Start Tracking</button>
     <button id="stop">Stop Tracking</button>
     <pre id="output"></pre>
     <pre id="procrastination-label"></pre>
 
     <script>
+
+      let mainTask = null;
+      let focusSettings = null;
+      let whitelist = null;
+      let isLoaded = false;
+
+      // Get settings
+      // TODO: only load other processes once settings are received
+      async function displaySettings() {
+        const settingsDiv = document.getElementById('settings-display');
+        
+        try {
+          console.log("Calling getSetupData...");
+          const data = await window.api.getSetupData();
+          console.log("Setting data received:", data);
+          
+          if (data) {
+            mainTask = data.activity;
+            focusSettings = data.focusPeriod;
+            whitelist = data.whitelist;
+
+            settingsDiv.innerHTML = `
+              <h3>Current Settings</h3>
+              <p>Activity: ${mainTask}</p>
+              <p>Focus: ${focusSettings.focus_length} mins</p>
+              <p>Break: ${focusSettings.break_length} mins</p>
+              <p>Whitelisted Sites: ${whitelist.join(', ')}</p>
+            `;
+
+            isLoaded = true;
+
+          } else {
+            settingsDiv.innerHTML = '<p>No settings saved yet</p>';
+          }
+        } catch (err) {
+          settingsDiv.innerHTML = '<p>Error loading settings</p>';
+          console.error(err);
+        }
+      }
+
+      // Event listener
+      window.addEventListener('DOMContentLoaded', displaySettings);
+
         const output = document.getElementById('output');
         const procrastinationLabel = document.getElementById('procrastination-label');
         const activityLog = {}; // Dictionary to store activity by app name
@@ -27,6 +73,7 @@
             return;
           }
           window.api.startTracking(taskInput);
+
 
         output.textContent = 'Started tracking...';
         };

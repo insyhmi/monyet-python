@@ -6,6 +6,8 @@ const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 let win;
+let setupData;
+let intervalId;
 let user_task = "";
 let wasProcrastinating = false;
 
@@ -18,15 +20,15 @@ function createWindow() {
     show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // optional
+      contextIsolation: true
     },
   });
 
-  win.loadFile(path.join(__dirname, 'index.html'));
+  win.loadFile(path.join(__dirname, 'setup.html'));
   console.log('Window bounds:', win.getBounds());
 }
 
-// 🧠 Active Window Tracking
-let intervalId;
+// Active Window Tracking
 
 ipcMain.handle('start-tracking', async (event, task) => {
   if (intervalId) return;
@@ -82,6 +84,27 @@ ipcMain.on('stop-tracking', () => {
   if (intervalId) {
     clearInterval(intervalId);
     intervalId = null;
+  }
+});
+
+
+// Save data in memory from setup window
+ipcMain.handle('save-setup-data', async (event, data) => {
+  setupData = data;
+  console.log('Setup data saved:', setupData);
+  return true;
+});
+
+// Get setup data from main page
+ipcMain.handle('get-setup-data', async () => {
+  console.log("DEBUG Getting setup data....")
+  return setupData;
+}); 
+
+// Load main page (index.html) after setup
+ipcMain.on('load-main-window', () => {
+  if (win) {
+    win.loadFile(path.join(__dirname, 'index.html'));
   }
 });
 
