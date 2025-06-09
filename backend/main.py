@@ -50,11 +50,10 @@ async def check_focus(request: Request):
     print(f"Gemini Procrastination Analysis -> isProcrastinating: {isprocrastinating}, score: {score}")
     return {
         "status": "ok",
-        "current_task" : task,
         "current_window" : activity,
         "score" : score,
         "isProcrastinating" : isprocrastinating
-        }
+    }
 
 
 @app.post("/score")
