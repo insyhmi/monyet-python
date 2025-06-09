@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const activeWin = require('active-win');
 const path = require('path');
 
@@ -8,6 +8,8 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 let win;
 let setupData;
 let intervalId;
+let user_task = "";
+let wasProcrastinating = false;
 
 function createWindow() {
   console.log('Creating browser window...');
@@ -42,28 +44,40 @@ ipcMain.handle('start-tracking', async (event, task) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          current_task: task,
-          current_window: activity.title || activity.owner?.name || "Unknown"
+
+          current_task: user_task, 
+          current_window: result.title || result.owner?.name || "Unknown"
         }),
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error("FastAPI returned an error:", text);
-        return;
-      }
+        const responseData = await response.json();
+        console.log("Backend response:", responseData);
 
-      const responseData = await response.json();
-      console.log("Backend response:", responseData);
+        if (win && win.webContents && !win.webContents.isDestroyed()) {
+        win.webContents.send('active-window-data', result);
+        win.webContents.send('backend-result', responseData);
+        }
 
-      // Send window data to renderer (frontend)
-      if (win && win.webContents && !win.webContents.isDestroyed()) {
-        win.webContents.send('active-window-data', { activeWindow: activity, analysis: responseData });
-      }
+        // Check if the user is now procrastinating, and wasn't before
+        if (responseData.isProcrastinating && !wasProcrastinating) {
+            new Notification({
+                title: 'Focus Alert 🚨',
+                body: `You're currently off-task: ${responseData.current_window}`,
+            }).show();
+
+            wasProcrastinating = true;
+        } else if (!responseData.isProcrastinating) {
+            // Reset flag when user is back on task
+            wasProcrastinating = false;
+        }
     } catch (err) {
       console.error("Error in tracking:", err);
     }
-  }, 10000); // Interval in miliseconds
+  }, 5000); // Interval in miliseconds
+});
+
+ipcMain.on('notify-test', (event, { title, body }) => {
+    notify(title, body);
 });
 
 ipcMain.on('stop-tracking', () => {
@@ -73,8 +87,8 @@ ipcMain.on('stop-tracking', () => {
   }
 });
 
-// Save data in memory from setup window
 
+// Save data in memory from setup window
 ipcMain.handle('save-setup-data', async (event, data) => {
   setupData = data;
   console.log('Setup data saved:', setupData);
@@ -87,13 +101,19 @@ ipcMain.handle('get-setup-data', async () => {
   return setupData;
 }); 
 
-
 // Load main page (index.html) after setup
 ipcMain.on('load-main-window', () => {
   if (win) {
     win.loadFile(path.join(__dirname, 'index.html'));
   }
 });
+
+function notify(title, body){
+    new Notification({
+        title : title,
+        body : body,
+    }).show();
+}
 
 app.whenReady().then(() => {
   createWindow();
