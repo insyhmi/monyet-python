@@ -63,36 +63,9 @@ async def check_focus(request: Request):
         "current_window" : activity,
         "score" : score,
         "isProcrastinating" : isprocrastinating
+    }
 
 
-@app.post("/score")
-
-async def calculate_score_data(app_data: AppData):
-    """
-    Calculates score and procrastination chain data
-
-    SCORING SYSTEM:
-    
-    Single procrastination log = -0.2 PT
-    Three-In-A-Row (30 s) procrastination log = -3.0PT
-    Thirty-In-A-Row (5 mins) productivity log = +2.0PT
-
-    """
-    entries = app_data.data
-
-    INTERVAL = 10  # Each entry is 10 seconds
-    BLACKLIST_SCORE_PER_30S = -3
-    PRODUCTIVE_SCORE_PER_5MINS = 2
-    ISOLATED_PENALTY = -0.2
-
-    total_blacklist_time = 0
-    total_productive_time = 0
-    isolated_penalty_count = 0
-    procrastination_chains = []
-
-    procrastination_chain = 0
-
-      
 @app.post("/score")
 
 async def calculate_score_data(app_data: AppData):

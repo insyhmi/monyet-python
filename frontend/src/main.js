@@ -1,15 +1,19 @@
 const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const activeWin = require('active-win');
 const path = require('path');
+const Store = require('electron-store').default;
 
 // 👇 Fix fetch for Node.js using dynamic import
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 let win;
-let setupData;
+let setupData = null;
 let intervalId;
 let user_task = "";
 let wasProcrastinating = false;
+
+// New store
+const store = new Store();
 
 function createWindow() {
   console.log('Creating browser window...');
@@ -20,7 +24,8 @@ function createWindow() {
     show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // optional
-      contextIsolation: true
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 
@@ -86,18 +91,19 @@ ipcMain.on('stop-tracking', () => {
   }
 });
 
-
 // Save data in memory from setup window
 ipcMain.handle('save-setup-data', async (event, data) => {
-  setupData = data;
-  console.log('Setup data saved:', setupData);
+  store.set('setupData', data);
+  const storedData = store.get('setupData'); // confirm it's really saved
+  console.log('DEBUG main.js confirms setupData is now:', storedData);
   return true;
 });
 
 // Get setup data from main page
 ipcMain.handle('get-setup-data', async () => {
-  console.log("DEBUG Getting setup data....");
-  return setupData;
+  const data = store.get('setupData');
+  console.log('Retrieved setup data in main.js:', data);
+  return data;
 }); 
 
 // Load main page (index.html) after setup
