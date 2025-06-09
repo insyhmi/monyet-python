@@ -38,15 +38,14 @@ ipcMain.handle('start-tracking', async (event, task) => {
       console.log("Current goal is", task);
       const activity = await activeWin();
       console.log("Detected active window:", activity);
-
-      // 🚀 Send active window title to FastAPI backend
+      // Send active window title to FastAPI backend
       const response = await fetch('http://localhost:8000/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
 
-          current_task: user_task, 
-          current_window: result.title || result.owner?.name || "Unknown"
+          current_task: task, 
+          current_window: activity.title || activity.owner?.name || "Unknown"
         }),
       });
 
@@ -54,7 +53,7 @@ ipcMain.handle('start-tracking', async (event, task) => {
         console.log("Backend response:", responseData);
 
         if (win && win.webContents && !win.webContents.isDestroyed()) {
-        win.webContents.send('active-window-data', result);
+        win.webContents.send('active-window-data', activity);
         win.webContents.send('backend-result', responseData);
         }
 
@@ -73,7 +72,7 @@ ipcMain.handle('start-tracking', async (event, task) => {
     } catch (err) {
       console.error("Error in tracking:", err);
     }
-  }, 5000); // Interval in miliseconds
+  }, 10000); // Interval in miliseconds
 });
 
 ipcMain.on('notify-test', (event, { title, body }) => {
@@ -97,7 +96,7 @@ ipcMain.handle('save-setup-data', async (event, data) => {
 
 // Get setup data from main page
 ipcMain.handle('get-setup-data', async () => {
-  console.log("DEBUG Getting setup data....")
+  console.log("DEBUG Getting setup data....");
   return setupData;
 }); 
 
