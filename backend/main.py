@@ -83,12 +83,13 @@ async def calculate_score_data(app_data: AppData):
     procrastination_chains = []
 
     procrastination_chain = 0
-    procrastinating = False
+
 
     for i, entry in enumerate(entries):
         # Procrastination log found
         if entry.procrastinating:
-            procrastinating = True
+
+            # Adds to current procrastination chain
             procrastination_chain += 1
             is_isolated = (
                 (i == 0 or not entries[i - 1].procrastinating) and
@@ -98,8 +99,10 @@ async def calculate_score_data(app_data: AppData):
                 isolated_penalty_count += 1
             else:
                 total_blacklist_time += INTERVAL
+
+        # Productivity log found
         else:
-            procrastinating = False
+            # Concludes current chain if exists and appends it
             if procrastination_chain > 0:
                 procrastination_chains.append(procrastination_chain)
             procrastination_chain = 0
