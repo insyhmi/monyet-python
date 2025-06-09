@@ -31,7 +31,6 @@ class TaskInput(BaseModel):
 async def check_focus(request: Request):
     data = await request.json()
     print("Received data at /check:", data)
-
     # Set data
     task = data['current_task']
     activity = data['current_window']
@@ -47,20 +46,5 @@ async def check_focus(request: Request):
         "score" : score,
         "isProcrastinating" : isprocrastinating
         }
-
-
-
-    # Gets similarity of tasks
-    isProcrastinating, score = gemini_demo.analyze_task_alignment(task, activity)
-    print(f"Gemini Procrastination Analysis -> {"Procrastinating" if isProcrastinating else "Productive"}, score: {score}")
-
-
-    return {
-        "status": "ok",
-        "received": data,
-        "isProcrastinating": bool(isProcrastinating),
-        "score": float(score)
-    }
-
 
 print("FastAPI app is initialized:", app)
