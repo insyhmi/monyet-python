@@ -33,6 +33,10 @@
         let breakTime;
         let focusIntervals;
 
+        let score = null;
+        let log_details = null;
+        let recommendations = null;
+
         // Clock
         class FocusBreakTimer {
             constructor(focusTimeMinutes, breakTimeMinutes, intervals, display) {
@@ -80,10 +84,14 @@
                     } else {
                         console.log("🎉 All intervals complete!");
                         document.getElementById(this.display).textContent = "🎉 All intervals complete!";
+
+                        // Sends score
+                        this.sendScore();
                     }
                 }
             }
 
+            // Debug option to hasten the time to its end.
             softStop() {
                 this.currentInterval = this.totalIntervals;
                 this.timeLeft = 1;
@@ -96,26 +104,21 @@
                 console.log("⏹️ Timer stopped manually.");
                 document.getElementById(this.display).textContent = "⏹️ Timer stopped manually.";
             }
-          
+            
+            // Gets score from backend
             async sendScore(){
                 try {
-                    const formattedData = Object.values(activityLog).flat().map(entry => ({
-                    procrastinating: entry.procrastinating,
-                    site: entry.site
-                }));
-                const response = await fetch("http://localhost:8000/score", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ data: formattedData })
-                });
-                const result = await response.json();
-                console.log("🎯 Score result:", result);
-                document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
+                    const result = await window.electronAPI.getScore(activityLog);
+                    console.log("Score from backend:", result);
+                    score = result.score;
+                    log_details = result.details;
                 } catch (err) {
-                    console.error("Error sending score data:", err);
-                }
+                    console.error("Error fetching score:", err);
+                }         
+            }
+
+            async getRecommendations() {
+                
             }
         }
 
