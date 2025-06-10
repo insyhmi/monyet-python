@@ -19,6 +19,8 @@
     <pre id="timer"></pre>
     <pre id="output"></pre>
     <pre id="procrastination-label"></pre>
+
+    <div id="session-conclusion"></div>
     
 
     <script>
@@ -43,6 +45,8 @@
                 this.timeLeft = this.focusTime;
                 this.timer = null;
             }
+
+            // Checks whether ticks have exceeded intervals
             start() {
                 if (this.currentInterval >= this.totalIntervals) {
                     console.log("✅ All intervals completed.");
@@ -56,6 +60,8 @@
                 this.tick();
                 }, 1000);
             }
+
+            // Ticks down and switches between corresponding phases when timer reaches zero
             tick() {
                 const minutes = Math.floor(this.timeLeft / 60);
                 const seconds = this.timeLeft % 60;
@@ -77,17 +83,20 @@
                     }
                 }
             }
+
             softStop() {
                 this.currentInterval = this.totalIntervals;
                 this.timeLeft = 1;
                 console.log("⏹️ Soft Stop initiated.");
                 this.sendScore();
             }
+          
             hardStop() {
                 clearInterval(this.timer);
                 console.log("⏹️ Timer stopped manually.");
                 document.getElementById(this.display).textContent = "⏹️ Timer stopped manually.";
             }
+          
             async sendScore(){
                 try {
                     const formattedData = Object.values(activityLog).flat().map(entry => ({
@@ -109,41 +118,45 @@
                 }
             }
         }
+
+
         // Get settings
         // TODO: only load other processes once settings are received
         async function displaySettings() {
-        const settingsDiv = document.getElementById('settings-display');
+            const settingsDiv = document.getElementById('settings-display');
 
-        try {
-            console.log("Calling getSetupData...");
-            const data = await window.api.getSetupData();
-            console.log("Setting data received:", data);
-            
-            if (data) {
-                mainTask = data.activity;
-                focusSettings = data.focusPeriod;
-                whitelist = data.whitelist;
-                focusTime = focusSettings.focus_length;
-                breakTime = focusSettings.break_length;
-                focusIntervals = focusSettings.interval;
+            try {
+                console.log("Calling getSetupData...");
+                const data = await window.api.getSetupData();
+                console.log("Setting data received:", data);
                 
-                settingsDiv.innerHTML = `
-                    <h3>Current Settings</h3>
-                    <p>Activity: ${mainTask}</p>
-                    <p>Focus: ${focusTime} mins</p>
-                    <p>Break: ${breakTime} mins</p>
-                    <p>Whitelisted Sites: ${whitelist.join(', ')}</p>
-                `;
+                // Gets data normally
+                if (data) {
+                    mainTask = data.activity;
+                    focusSettings = data.focusPeriod;
+                    whitelist = data.whitelist;
+                    focusTime = focusSettings.focus_length;
+                    breakTime = focusSettings.break_length;
+                    focusIntervals = focusSettings.interval;
+                    
+                    settingsDiv.innerHTML = `
+                        <h3>Current Settings</h3>
+                        <p>Activity: ${mainTask}</p>
+                        <p>Focus: ${focusTime} mins</p>
+                        <p>Break: ${breakTime} mins</p>
+                        <p>Whitelisted Sites: ${whitelist.join(', ')}</p>
+                    `;
 
-                isLoaded = true;
-                timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
-            } else {
-                settingsDiv.innerHTML = '<p>No settings saved yet</p>';
-            }}
-        catch (err) {
-            settingsDiv.innerHTML = '<p>Error loading settings</p>';
-            console.error(err);
-            }
+                    isLoaded = true;
+                    timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
+                } else {
+                    // Saves in settings-id
+                    settingsDiv.innerHTML = '<p>No settings saved yet</p>';
+                }}
+            catch (err) {
+                settingsDiv.innerHTML = '<p>Error loading settings</p>';
+                console.error(err);
+                }
         }
         
       // Event listener
@@ -153,6 +166,7 @@
         const procrastinationLabel = document.getElementById('procrastination-label');
         const activityLog = {}; // Dictionary to store activity by app name
 
+        // Start tracking clicked
         document.getElementById('start').onclick = async () => {
             const taskInput = mainTask;
             if (!taskInput) {
@@ -164,7 +178,7 @@
             output.textContent = 'Started tracking...';
         };
         
-        // Sends request to stop tracking
+        // Stop tracking clicked
         document.getElementById('stop').onclick = () => {
             window.api.stopTracking();
             output.textContent = 'Stopped tracking.';
@@ -189,6 +203,7 @@
             activityLog[appName].push({
                 site: appName,
                 procrastinating: procrastinating
+
             });
 
             output.textContent = JSON.stringify({ site: appName, procrastinating }, null, 2);

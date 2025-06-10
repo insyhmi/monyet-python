@@ -60,7 +60,8 @@
         : [];
 
       try {
-          window.api.saveSetupData({ focusPeriod, activity, whitelist });
+          await window.api.saveSetupData({ focusPeriod, activity, whitelist });
+          console.log("DEBUG saveSetupData success!")
           window.api.loadMainWindow();
       } catch (err) {
           alert('Error saving data: ' + err.message);
