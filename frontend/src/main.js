@@ -53,8 +53,8 @@ ipcMain.handle('start-tracking', async (event, task) => {
         console.log("Backend response:", responseData);
 
         if (win && win.webContents && !win.webContents.isDestroyed()) {
-        win.webContents.send('active-window-data', activity);
-        win.webContents.send('backend-result', responseData);
+            win.webContents.send('active-window-data', activity);
+            win.webContents.send('backend-result', responseData);
         }
 
         // Check if the user is now procrastinating, and wasn't before

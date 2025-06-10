@@ -9,33 +9,23 @@
   <form id="setupForm">
 
     <h3>Focus Setting</h3>
-    <label>
-      Focus length (minutes) *<br/>
-      <input type="number" id="work-time" min="1" required />
-    </label>
+    <label for = "work-time"> Focus length (minutes) </label> *<br/>
+      <input type="number" id="work-time" min="1" required /> <br/>
 
-    <label>
-      Break length (minutes) *<br/>
-      <input type="number" id="rest-time" />
-    </label>
+    <label for = "rest-time"> Break length (minutes) </label> *<br/>
+      <input type="number" id="rest-time" /> <br/>
 
-    <label>
-      Focus intervals (number of repetitions) *<br/>
-      <input type="number" id="intervals" min="1" required />
-    </label>
+    <label for = "intervals"> Focus intervals (number of repetitions) </label> *<br/>
+      <input type="number" id="intervals" min="1" required /><br/>
 
     <br> <br>
 
     <h3>Activity Setting</h3>
-    <label>
-      Activity Done *<br/>
-      <input type="text" id="activity" required />
-    </label>
+    <label for = 'activity'> Activity Done </label>*<br/>
+      <input type="text" id="activity" required /><br/>
 
-    <label>
-      Whitelisted Websites (one per line)<br/>
+    <label for="whitelist"> Whitelisted Websites (one per line) </label><br/>
       <textarea id="whitelist" rows="5" placeholder="e.g. example.com"></textarea>
-    </label>
 
     <button type="submit">Start Tracking</button>
   </form>

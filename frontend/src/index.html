@@ -15,6 +15,7 @@
 
     <button id="start">Start Tracking</button>
     <button id="stop">Stop Tracking</button>
+    <button id="softstop">Debug soft stop</button>
     <pre id="timer"></pre>
     <pre id="output"></pre>
     <pre id="procrastination-label"></pre>
@@ -76,10 +77,36 @@
                     }
                 }
             }
-            stop() {
+            softStop() {
+                this.currentInterval = this.totalIntervals;
+                this.timeLeft = 1;
+                console.log("⏹️ Soft Stop initiated.");
+                this.sendScore();
+            }
+            hardStop() {
                 clearInterval(this.timer);
                 console.log("⏹️ Timer stopped manually.");
                 document.getElementById(this.display).textContent = "⏹️ Timer stopped manually.";
+            }
+            async sendScore(){
+                try {
+                    const formattedData = Object.values(activityLog).flat().map(entry => ({
+                    procrastinating: entry.procrastinating,
+                    site: entry.site
+                }));
+                const response = await fetch("http://localhost:8000/score", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ data: formattedData })
+                });
+                const result = await response.json();
+                console.log("🎯 Score result:", result);
+                document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
+                } catch (err) {
+                    console.error("Error sending score data:", err);
+                }
             }
         }
         // Get settings
@@ -119,7 +146,6 @@
             }
         }
         
-
       // Event listener
         window.addEventListener('DOMContentLoaded', displaySettings);
 
@@ -142,42 +168,38 @@
         document.getElementById('stop').onclick = () => {
             window.api.stopTracking();
             output.textContent = 'Stopped tracking.';
-            timer.stop();
+            timer.hardStop();
         };
 
+        document.getElementById('softstop').onclick = () => {
+            window.api.stopTracking();
+            timer.softStop();
+        }
+
         window.api.onWindowData(async (data) => {
-            console.log((data));
             if (!data || !data.owner || !data.owner.name) return;
 
-            const appName = activeWindow.owner.name;
-            const timestamp = new Date().toLocaleString();
+            const appName = data.owner.name;
+            const procrastinating = !whitelist.includes(appName);
 
-            // Array version
             if (!activityLog[appName]) {
                 activityLog[appName] = [];
             }
-            activityLog[appName].push({
-            title: data.title || 'No title',
-            url: data.url || 'N/A',
-            time: timestamp
-        });
-        // Show latest app data
-            const appData = {
-                title: data.title || "No title",
-                url: data.url || 'N/A',
-            };
 
-            output.textContent = JSON.stringify(appData, null, 2);
-            // Procrastination analysis
-            window.api.onBackendResult((analysis) => {
-                procrastinationLabel.textContent = analysis.isProcrastinating
-                    ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
-                    : `Productive (score: ${analysis.score.toFixed(2)})`;
+            activityLog[appName].push({
+                site: appName,
+                procrastinating: procrastinating
             });
 
+            output.textContent = JSON.stringify({ site: appName, procrastinating }, null, 2);
         });
-
-
+        window.api.onBackendResult((analysis) => {
+            console.log(analysis);
+            console.log(typeof(analysis));
+            procrastinationLabel.textContent = analysis.isProcrastinating
+                ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
+                : `Productive (score: ${analysis.score.toFixed(2)})`;
+        });
     </script>
   </body>
 </html>
