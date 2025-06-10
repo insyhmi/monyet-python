@@ -55,26 +55,28 @@ ipcMain.handle('start-tracking', async (event, task) => {
         }),
       });
 
-      const responseData = await response.json();
-      console.log("Backend response:", responseData);
 
-      if (win && win.webContents && !win.webContents.isDestroyed()) {
-      win.webContents.send('active-window-data', activity);
-      win.webContents.send('backend-result', responseData);
-      }
+        const responseData = await response.json();
+        console.log("Backend response:", responseData);
 
-      // Check if the user is now procrastinating, and wasn't before
-      if (responseData.isProcrastinating && !wasProcrastinating) {
-          new Notification({
-              title: 'Focus Alert 🚨',
-              body: `You're currently off-task: ${responseData.current_window}`,
-          }).show();
+        if (win && win.webContents && !win.webContents.isDestroyed()) {
+            win.webContents.send('active-window-data', activity);
+            win.webContents.send('backend-result', responseData);
+        }
 
-          wasProcrastinating = true;
-      } else if (!responseData.isProcrastinating) {
-          // Reset flag when user is back on task
-          wasProcrastinating = false;
-      }
+        // Check if the user is now procrastinating, and wasn't before
+        if (responseData.isProcrastinating && !wasProcrastinating) {
+            new Notification({
+                title: 'Focus Alert 🚨',
+                body: `You're currently off-task: ${responseData.current_window}`,
+            }).show();
+
+            wasProcrastinating = true;
+        } else if (!responseData.isProcrastinating) {
+            // Reset flag when user is back on task
+            wasProcrastinating = false;
+        }
+
     } catch (err) {
       console.error("Error in tracking:", err);
     }

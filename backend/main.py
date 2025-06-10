@@ -65,7 +65,7 @@ async def check_focus(request: Request):
         "isProcrastinating" : isprocrastinating
     }
 
-
+  
 @app.post("/score")
 
 async def calculate_score_data(app_data: AppData):
@@ -94,6 +94,9 @@ async def calculate_score_data(app_data: AppData):
     procrastination_chain = 0
     chain_start = None
     chain_end = None
+
+    print("Received data at /score:", )
+
 
 
     for i, entry in enumerate(entries):
