@@ -34,6 +34,32 @@ function createWindow() {
 }
 
 // Active Window Tracking
+ipcMain.handle('get-score', async (event, activityLog) => {
+  let formattedData;
+
+  try {
+    formattedData = Object.values(activityLog).flat().map(entry => ({
+    procrastinating: entry.procrastinating,
+    site: entry.site
+  })) 
+  } catch (err) {
+      console.error("Error in getting activityLog", err);
+      return { error: 'Failed to process activity log' };
+  }
+
+  const response = await fetch("http://localhost:8000/score", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ data: formattedData })
+  });
+
+  const result = await response.json();
+  console.log("DEBUG main.js result", result);
+  win.webContents.send('score', result)
+  return result;
+});
 
 ipcMain.handle('start-tracking', async (event, task) => {
   if (intervalId) return;

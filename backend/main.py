@@ -166,6 +166,9 @@ async def calculate_score_data(app_data: AppData):
     score += (total_productive_time // 300) * PRODUCTIVE_SCORE_PER_5MINS
     score += isolated_penalty_count * ISOLATED_PENALTY
 
+    print(round(score, 2))
+    print(total_productive_time)
+
     return {
         "score": round(score, 2),
         "details": {
