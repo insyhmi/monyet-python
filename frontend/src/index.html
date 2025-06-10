@@ -106,23 +106,27 @@
             }
             
             // Gets score from backend
-            async sendScore(){
+           async sendScore(){
                 try {
-                    const result = await window.electronAPI.getScore(activityLog);
-                    console.log("Score from backend:", result);
-                    score = result.score;
-                    log_details = result.details;
+                    const formattedData = Object.values(activityLog).flat().map(entry => ({
+                    procrastinating: entry.procrastinating,
+                    site: entry.site
+                }));
+                const response = await fetch("http://localhost:8000/score", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ data: formattedData })
+                });
+                const result = await response.json();
+                console.log("🎯 Score result:", result);
+                document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
                 } catch (err) {
-                    console.error("Error fetching score:", err);
-                }         
-            }
-
-            async getRecommendations() {
-                
+                    console.error("Error sending score data:", err);
+                }
             }
         }
-
-
         // Get settings
         // TODO: only load other processes once settings are received
         async function displaySettings() {
