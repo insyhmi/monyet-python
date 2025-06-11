@@ -20,7 +20,7 @@
     <pre id="output"></pre>
     <pre id="procrastination-label"></pre>
 
-    <div id="session-conclusion"></div>
+    <pre id="session-conclusion"></div>
     
 
     <script>
@@ -106,26 +106,56 @@
             }
             
             // Gets score from backend
-           async sendScore(){
+            async sendScore(){
+                let result_data;
                 try {
                     const formattedData = Object.values(activityLog).flat().map(entry => ({
                     procrastinating: entry.procrastinating,
                     site: entry.site
                 }));
-                const response = await fetch("http://localhost:8000/score", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ data: formattedData })
-                });
-                const result = await response.json();
-                console.log("🎯 Score result:", result);
-                document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
+
+                    console.log("formattedData", formattedData);
+                    const response = await fetch("http://localhost:8000/score", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ data: formattedData })
+                    });
+                    const result = await response.json();
+                    result_data = {
+                        "focus_length": focusTimeMinutes,
+                        ...result.details
+                    }
+                    console.log("🎯 Score result:", result);
+                    document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
+
                 } catch (err) {
                     console.error("Error sending score data:", err);
                 }
-            }
+
+                try {
+
+                    console.log("Entering adapt:", result_data);
+                    const adaptResponse = await fetch("http://localhost:8000/adapt", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ data: result_data.details })
+                    });
+
+                    const adaptResult = await adaptResponse.json();
+                    const recommendations = adaptResult.recommendations || ["No recommendations for now!"];
+                    const conclusionDiv = document.getElementById("session-conclusion");
+                    print(recommendations);
+                    conclusionDiv.innerHTML = "<strong>Recommendations:</strong><ul>" + 
+                    recommendations.map(item => `<li>${item}</li>`).join("") +
+                    "</ul>";
+
+                } catch (err) {
+                    console.error("Error getting recommendations:", err);
+                }
         }
         // Get settings
         // TODO: only load other processes once settings are received
