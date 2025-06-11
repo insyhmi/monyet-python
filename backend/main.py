@@ -1,3 +1,12 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads the .env file
+
+# Access the API key
+api_key = os.getenv("GEMINI_API_KEY")
+print("Gemini API Key:", api_key)  # just to confirm it's loaded (remove in production)
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -8,6 +17,21 @@ from demo_files import gemini_demo
 
 from typing import List, Tuple
 from typing import List
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+app = FastAPI()
+
+# Serve frontend directory
+app.mount("/frontend", StaticFiles(directory="../frontend", html=True), name="frontend")
+
+# Optional: default route
+@app.get("/")
+def read_index():
+    return FileResponse("../frontend/index.html")
 
 
 import os
@@ -85,6 +109,7 @@ async def calculate_score_data(app_data: AppData):
     BLACKLIST_SCORE_PER_30S = -3
     PRODUCTIVE_SCORE_PER_5MINS = 2
     ISOLATED_PENALTY = -0.2
+
 
     total_blacklist_time = 0
     total_productive_time = 0
@@ -166,9 +191,6 @@ async def calculate_score_data(app_data: AppData):
     score += (total_productive_time // 300) * PRODUCTIVE_SCORE_PER_5MINS
     score += isolated_penalty_count * ISOLATED_PENALTY
 
-    print(round(score, 2))
-    print(total_productive_time)
-
     return {
         "score": round(score, 2),
         "details": {
@@ -246,3 +268,7 @@ async def procrastination_analysis(data: AdaptRequest):
     return {"recommendations": recommendations}
 
 print("FastAPI app is initialized:", app)
+
+@app.get("/")
+def home():
+    return {"message": "FastAPI backend is running!"}

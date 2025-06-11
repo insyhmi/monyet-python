@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const activeWin = require('active-win');
 const path = require('path');
-const audioPlayer = require ('play-sound')();
 const Store = require('electron-store').default;
 
 // 👇 Fix fetch for Node.js using dynamic import
@@ -12,7 +11,6 @@ let setupData = null;
 let intervalId;
 let user_task = "";
 let wasProcrastinating = false;
-let gemini_apiCallInterval = 10000 //ms 
 
 // New store
 const store = new Store();
@@ -35,20 +33,28 @@ function createWindow() {
   console.log('Window bounds:', win.getBounds());
 }
 
-async function geminiTrackFunction() {
-    try {
-        console.log("Current goal is", currentTask); // Store this globally or in closure
-        const activity = await activeWin();
-        console.log("Detected active window:", activity);
+// Active Window Tracking
 
-        const response = await fetch('http://localhost:8000/check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                current_task: currentTask,
-                current_window: activity.title || activity.owner?.name || "Unknown"
-            }),
-        });
+ipcMain.handle('start-tracking', async (event, task) => {
+  if (intervalId) return;
+
+  intervalId = setInterval(async () => {
+    try {
+      console.log("Current goal is", task);
+      const activity = await activeWin();
+      console.log("Detected active window:", activity);
+
+      // Send active window title to FastAPI backend
+      const response = await fetch('http://localhost:8000/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+
+          current_task: task, 
+          current_window: activity.title || activity.owner?.name || "Unknown"
+        }),
+      });
+
 
         const responseData = await response.json();
         console.log("Backend response:", responseData);
@@ -58,37 +64,23 @@ async function geminiTrackFunction() {
             win.webContents.send('backend-result', responseData);
         }
 
+        // Check if the user is now procrastinating, and wasn't before
         if (responseData.isProcrastinating && !wasProcrastinating) {
             new Notification({
                 title: 'Focus Alert 🚨',
                 body: `You're currently off-task: ${responseData.current_window}`,
             }).show();
+
             wasProcrastinating = true;
         } else if (!responseData.isProcrastinating) {
+            // Reset flag when user is back on task
             wasProcrastinating = false;
         }
 
     } catch (err) {
-        console.error("Error in tracking:", err);
+      console.error("Error in tracking:", err);
     }
-}
-
-// Active Window Tracking
-ipcMain.on('gemini_changeApiInterval', async (time) =>{
-    console.log("Changing Gemini API interval to", time);
-    gemini_apiCallInterval = time;
-
-    if (trackingActive) {
-        clearInterval(intervalId);
-        intervalId = setInterval(geminiTrackFunction, gemini_apiCallInterval);
-    }
-});
-
-
-ipcMain.handle('start-tracking', async (event, task) => {
-  if (intervalId) return;
-  currentTask = task; // Make sure this variable is available in the outer scope
-  intervalId = setInterval(geminiTrackFunction, gemini_apiCallInterval);
+  }, 10000); // Interval in miliseconds
 });
 
 ipcMain.on('notify-test', (event, { title, body }) => {
@@ -144,3 +136,4 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
+

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sisyphus</title>
+<<<<<<< HEAD
 </head>
 <body>
   <h1>Sisyphus.</h1>
@@ -26,11 +27,231 @@
 
     <label for="whitelist"> Whitelisted Websites (one per line) </label><br/>
       <textarea id="whitelist" rows="5" placeholder="e.g. example.com"></textarea>
+=======
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #ab83ce;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #splash {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ab83ce url('mainsisy.png') center center / cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      opacity: 1;
+      transition: opacity 2s ease;
+    }
+
+
+    #splash.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .logo-container {
+      position: absolute;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1000px;
+      z-index: 20;
+      padding: 0 20px;
+      box-sizing: border-box;
+      text-align: center;
+      animation: fadeIn 1s ease forwards;
+    }
+    .logo {
+      width: 1600px;
+      max-width: 110vw;
+      margin-bottom: 40px;
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: #2f2d2d;
+      margin-top: 250px;
+    }
+
+    .loader {
+      display: flex;
+      gap: 15px;
+      margin-top:40px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #090909;
+      animation: bounce 1s infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    #setupForm {
+      display: none;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.723);
+      padding: 10px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 650px;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+
+    label {
+      margin-top: 16px;
+      font-weight: bold;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .triple-inputs {
+      display: flex;
+      gap: 25px;
+      margin-top: 12px;
+    }
+
+    .triple-inputs > div {
+      flex: 1;
+    }
+
+    button {
+      margin-top: 24px;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(to right, #a90ced, #9000fe);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 600px) {
+      .triple-inputs {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Splash Screen -->
+  <div id="splash">
+    <div class="logo-container">
+      <img src="sisyphus.png" alt="Sisyphus Logo" class="logo" />
+    </div>
+    <div class="tagline">Preparing for the grind...</div>
+    <div class="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+
+  <!-- Setup Form -->
+  <form id="setupForm">
+    <h2>Sisyphus</h2>
+
+    <label for="activity">What are you working on?*</label>
+    <input type="text" id="activity" required />
+
+    <div class="triple-inputs">
+      <div>
+        <label for="work-time">Focus (min)*</label>
+        <input type="number" id="work-time" min="1" required style="font-size: 0.9rem;" />
+      </div>
+      <div>
+        <label for="rest-time">Break (min)</label>
+        <input type="number" id="rest-time" style="font-size: 0.9rem;" />
+      </div>
+      <div>
+        <label for="intervals">Intervals*</label>
+        <input type="number" id="intervals" min="1" required style="font-size: 0.9rem;" />
+      </div>
+    </div>
+
+    <label for="whitelist">Whitelisted Websites (one per line)</label>
+    <textarea id="whitelist" rows="4" placeholder="e.g. example.com"></textarea>
+>>>>>>> f71f371 (Initial commit for frontend-design)
 
     <button type="submit">Start Tracking</button>
   </form>
 
   <script>
+<<<<<<< HEAD
+=======
+    window.onload = () => {
+      const splash = document.getElementById('splash');
+      const form = document.getElementById('setupForm');
+
+      setTimeout(() => {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+          form.style.display = 'flex';
+        }, 1500);
+      }, 3000);
+    };
+
+    
+    
+    
+    
+>>>>>>> f71f371 (Initial commit for frontend-design)
     const { ipcRenderer } = window.api || require('electron').ipcRenderer;
 
     document.getElementById('setupForm').addEventListener('submit', async (e) => {
@@ -47,6 +268,7 @@
         return;
       }
 
+<<<<<<< HEAD
       // Focus period
       const focusPeriod = {
         focus_length: workTime, 
@@ -55,11 +277,20 @@
       }
 
       // Whitelisted websites
+=======
+      const focusPeriod = {
+        focus_length: workTime,
+        break_length: restTime || 0,
+        interval: intervals || 0
+      };
+
+>>>>>>> f71f371 (Initial commit for frontend-design)
       const whitelist = whitelistRaw
         ? whitelistRaw.split('\n').map(site => site.trim()).filter(Boolean)
         : [];
 
       try {
+<<<<<<< HEAD
           await window.api.saveSetupData({ focusPeriod, activity, whitelist });
           console.log("DEBUG saveSetupData success!")
           window.api.loadMainWindow();
@@ -72,3 +303,15 @@
   </script>
 </body>
 </html>
+=======
+        await window.api.saveSetupData({ focusPeriod, activity, whitelist });
+        console.log("DEBUG saveSetupData success!");
+        window.api.loadMainWindow();
+      } catch (err) {
+        alert('Error saving data: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
+>>>>>>> f71f371 (Initial commit for frontend-design)
