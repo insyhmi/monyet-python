@@ -12,5 +12,6 @@ contextBridge.exposeInMainWorld('api', {
 
   onWindowData: (callback) => ipcRenderer.on('active-window-data', (_, data) => callback(data)),
   onBackendResult: (callback) => ipcRenderer.on('backend-result', (_, result) => callback(result)),
+  gemini_changeApiInterval : (time) =>ipcRenderer.send('gemini_changeApiInterval', time)
 
 });

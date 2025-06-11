@@ -22,7 +22,7 @@
 
     <pre id="session-conclusion"></div>
     
-
+    <audio id="focus-audio" src="assets/test.mp3" preload="auto"></audio>
     <script>
 
         let mainTask = null;
@@ -32,6 +32,8 @@
         let focusTime;
         let breakTime;
         let focusIntervals;
+        let wasProcrastinate = false;
+        const focusAudio = document.getElementById('focus-audio');
 
         let score = null;
         let log_details = null;
@@ -70,7 +72,7 @@
                 const minutes = Math.floor(this.timeLeft / 60);
                 const seconds = this.timeLeft % 60;
                 const label = this.isFocus ? "🧠 Focus Time" : "☕ Break Time";
-                console.log(`${label} Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+                console.log(`${label} : ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
                 document.getElementById(this.display).textContent = `${label} Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                 this.timeLeft--;
                 if (this.timeLeft < 0) {
@@ -226,13 +228,16 @@
             window.api.stopTracking();
             timer.softStop();
         }
-
+        
+        async function gemini_changeApiInterval(time){ // time in miliseconds
+            window.api.gemini_changeApiInterval(time);
+            console.log("Gemini API interval changed. Now set to", time);
+        }
         window.api.onWindowData(async (data) => {
             if (!data || !data.owner || !data.owner.name) return;
 
             const appName = data.owner.name;
-            const procrastinating = !whitelist.includes(appName);
-
+            console.log(data.owner);
             if (!activityLog[appName]) {
                 activityLog[appName] = [];
             }
@@ -247,11 +252,20 @@
         });
         window.api.onBackendResult((analysis) => {
             console.log(analysis);
-            console.log(typeof(analysis));
+            if (analysis.isProcrastinating){
+                if (!wasProcrastinate){
+                    focusAudio.play().catch(err => {
+                        console.error("Failed to load audio");
+                    });
+                }
+            }else{
+                wasProcrastinate = false;
+            }
             procrastinationLabel.textContent = analysis.isProcrastinating
                 ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
                 : `Productive (score: ${analysis.score.toFixed(2)})`;
         });
+        
     </script>
   </body>
 </html>
