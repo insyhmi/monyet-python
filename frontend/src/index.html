@@ -174,6 +174,7 @@
         <pre id="session-conclusion"></pre>
         <div id="activity-log"><strong>Activity Log:</strong><br/></div>
         <audio id="focus-audio" src="assets/test.mp3" preload="auto"></audio>
+        <audio id="start-stop-audio" src="assets/start_stop.mp3" preload="auto"></audio>
       </div>
     </div>
     <div class="footer">
@@ -219,7 +220,95 @@
             this.timer = null;
             this.completed = false;
         }
+    // Enhanced Timer Class
+    class FocusBreakTimer {
+        constructor(focusTimeMinutes, breakTimeMinutes, intervals, display) {
+            this.focusTime = focusTimeMinutes * 60; // convert to seconds
+            this.breakTime = breakTimeMinutes * 60;
+            this.totalIntervals = intervals;
+            this.display = display;
+            this.currentInterval = 0;
+            this.isFocus = true;
+            this.timeLeft = this.focusTime;
+            this.timer = null;
+            this.completed = false;
+        }
 
+        start() {
+            if (this.completed) return;
+            
+            if (this.currentInterval >= this.totalIntervals) {
+                this.completeSession();
+                return;
+            }
+
+            this.timeLeft = this.isFocus ? this.focusTime : this.breakTime;
+            this.updateDisplay();
+            
+            this.timer = setInterval(() => this.tick(), 1000);
+            
+            // Start/stop tracking based on phase
+            if (this.isFocus) {
+                window.api.startTracking(mainTask);
+                window.api.sendNotification("🧠 Focus Time Started", `Let's focus on: ${mainTask}`);
+            } else {
+                window.api.stopTracking();
+                window.api.sendNotification("☕ Break Time Started", "Time to relax!");
+            }
+            this.playBreakAlarm();
+        }
+
+        tick() {
+            this.timeLeft--;
+            this.updateDisplay();
+
+            if (this.timeLeft <= 0) {
+                clearInterval(this.timer);
+                this.switchPhase();
+            }
+        }
+
+        switchPhase() {
+            if (!this.isFocus) {
+                this.currentInterval++;
+            }
+            this.isFocus = !this.isFocus;
+            
+            if (this.currentInterval < this.totalIntervals) {
+                this.start();
+            } else {
+                this.completeSession();
+            }
+        }
+
+        updateDisplay() {
+            const minutes = Math.floor(this.timeLeft / 60);
+            const seconds = this.timeLeft % 60;
+            const label = this.isFocus ? "🧠 Focus Time" : "☕ Break Time";
+            const intervalInfo = `(${this.currentInterval + 1}/${this.totalIntervals})`;
+            
+            document.getElementById(this.display).textContent = 
+                `${label} ${intervalInfo}: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        playBreakAlarm() {
+            start_stopAudio.play().catch(err => console.error("Start Stop play error:", err));
+        }
+
+        completeSession() {
+            clearInterval(this.timer);
+            this.completed = true;
+            document.getElementById(this.display).textContent = "🎉 Session Complete!";
+            window.api.sendNotification("🎉 Session Complete", "Great job on your focus session!");
+            this.sendSessionData();
+            window.api.stopTracking();
+        }
+
+        async sendSessionData() {
+            try {
+                // Prepare the data in the required format
+                const scoreData = {
+                data: activityLogs.map(entry => ({
         start() {
             if (this.completed) return;
             
@@ -319,7 +408,79 @@
                 console.log('Score calculation result:', result);
                 if (result.score > 80){
                     sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Congratulations! That was truly a productive session 🎊`;
+                    site: entry.site,
+                    geminiScore : entry.geminiScore
+                }))
+                };
+
+                // Send to FastAPI endpoint
+                const response = await fetch('http://localhost:8000/score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scoreData)
+                });
+
+                if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
+                const result = await response.json();
+                const sessionConclusion = document.getElementById("session-conclusion");
+                console.log('Score calculation result:', result);
+                if (result.score > 80){
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Congratulations! That was truly a productive session 🎊`;
+                }
+                else if (result.score > 60){
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Good work! Practice makes perfect`;
+                } else{
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>Uh oh... looks like someone failed to keep their promise...`;
+                }
+            document.getElementById('procrastination-label').innerText = ``;
+                return result;
+            } catch (error) {
+                console.error('Error sending score data:', error);
+                throw error;
+            }
+        }
+
+        displayResults(result) {
+            const scoreElement = document.getElementById("procrastination-label");
+            const conclusionDiv = document.getElementById("session-conclusion");
+            
+            if (result.score !== undefined) {
+                scoreElement.textContent = `Final Score: ${result.score.toFixed(2)}`;
+            }
+            
+            if (result.recommendations) {
+                conclusionDiv.innerHTML = `
+                    <strong>Recommendations:</strong>
+                    <ul>${result.recommendations.map(item => `<li>${item}</li>`).join('')}</ul>
+                `;
+            }
+        }
+
+        softStop() {
+            this.currentInterval = this.totalIntervals;
+            this.timeLeft = 1;
+            console.log("⏹️ Soft Stop initiated");
+            window.api.stopTracking();
+        }
+
+        hardStop() {
+            clearInterval(this.timer);
+            this.completed = true;
+            document.getElementById(this.display).textContent = "⏹️ Session Stopped";
+            docuemnt.getElementById('procrastination-label').innerText = "";
+            window.api.stopTracking();
+        }
+    }
+
+    // Load settings from main process
+    async function displaySettings() {
+        try {
+            const data = await window.api.getSetupData();
                 else if (result.score > 60){
                     sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Good work! Practice makes perfect`;
                 } else{
@@ -387,6 +548,23 @@
                     <p>Intervals: ${focusIntervals}</p>
                     <p>Whitelisted: ${whitelist.join(', ') || 'None'}</p>
                 `;
+            
+            if (data) {
+                mainTask = data.activity;
+                focusSettings = data.focusPeriod;
+                whitelist = data.whitelist || [];
+                focusTime = focusSettings.focus_length;
+                breakTime = focusSettings.break_length;
+                focusIntervals = focusSettings.interval;
+                
+                settingsDiv.innerHTML = `
+                    <h3>Current Settings</h3>
+                    <p>Activity: ${mainTask}</p>
+                    <p>Focus: ${focusTime} mins</p>
+                    <p>Break: ${breakTime} mins</p>
+                    <p>Intervals: ${focusIntervals}</p>
+                    <p>Whitelisted: ${whitelist.join(', ') || 'None'}</p>
+                `;
 
                 isLoaded = true;
                 timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
@@ -409,7 +587,78 @@
 
     document.getElementById('stop').addEventListener('click', () => {
         if (confirm("Are you sure you want to stop the current session?")) {
+                isLoaded = true;
+                timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
+            } else {
+                settingsDiv.innerHTML = '<p>No settings saved yet</p>';
+            }
+        } catch (err) {
+            console.error("Error loading settings:", err);
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('start').addEventListener('click', () => {
+        if (!mainTask) {
+            alert("Please configure your settings first");
+            return;
+        }
+        timer.start();
+    });
+
+    document.getElementById('stop').addEventListener('click', () => {
+        if (confirm("Are you sure you want to stop the current session?")) {
             timer.hardStop();
+        }
+    });
+
+    //document.getElementById('softstop').addEventListener('click', () => {
+       // timer.softStop();
+    //});
+
+    // Handle window activity data
+    window.api.onWindowData((data) => {
+        if (!data?.owner?.name) return;
+        
+        const appName = data.owner.name;
+        document.getElementById('procrastination-label').innerText = `Now committing: ${appName}`;
+        activityLog[appName] = activityLog[appName] || [];
+        
+        activityLog[appName].push({
+            site: appName,
+            timestamp: new Date().toISOString(),
+            procrastinating: data.procrastinating
+        });
+
+        console.log(activityLog);
+    });
+    window.api.playAlertSound((value) => {
+        focusAudio.play();
+    });
+    // Handle backend analysis results
+    window.api.onBackendResult((analysis) => {
+        const labelElement = document.getElementById("procrastination-label");
+        
+        if (analysis.isProcrastinating) {
+            if (!wasProcrastinate) {
+                focusAudio.play().catch(console.error);
+                wasProcrastinate = true;
+            }
+            labelElement.innerHTML = `Bro is NOT that serious 😔<br>Procrastinating (score: ${analysis.score.toFixed(2)})`;
+        } else {
+            wasProcrastinate = false;
+            labelElement.innerHTML = `Now Commiting: ${analysis.current_window}!<br>Productive (score: ${analysis.score.toFixed(2)})`;
+        }
+        activityLogs.push({
+            procrastinating: analysis.isProcrastinating,
+            site: analysis.current_window,
+            geminiScore: analysis.score
+        });
+        console.log(activityLogs);
+    });
+
+    // Initialize when DOM loads
+    window.addEventListener('DOMContentLoaded', displaySettings);
         }
     });
 
