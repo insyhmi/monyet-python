@@ -2,11 +2,14 @@ import cv2
 import numpy as np
 import os
 
-def detect_objects_from_camera(ban_list, need_list, model_dir="../backend_support"):
+PATH  = os.path.dirname(__file__)
+def detect_objects_from_camera(model_dir="../backend_support"):
+    ban_list = ["cell phone", "tv"]
+    need_list = ["person"]
     # Load YOLOv4 model
-    config_path = os.path.join(model_dir, "yolov4.cfg")
-    weights_path = os.path.join(model_dir, "yolov4.weights")
-    names_path = os.path.join(model_dir, "coco.names")
+    config_path = os.path.join(PATH, model_dir, "yolov4.cfg")
+    weights_path = os.path.join(PATH,model_dir, "yolov4.weights")
+    names_path = os.path.join(PATH,model_dir, "coco.names")
 
     if not all(os.path.exists(p) for p in [config_path, weights_path, names_path]):
         raise FileNotFoundError("YOLO files not found in {}".format(model_dir))
@@ -86,6 +89,3 @@ def detect_objects_from_camera(ban_list, need_list, model_dir="../backend_suppor
         cap.release()
         cv2.destroyAllWindows()
 
-ban_list = ["cell phone", "tv"]
-need_list = ["person"]
-detect_objects_from_camera(ban_list, need_list)
