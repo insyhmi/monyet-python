@@ -285,7 +285,7 @@
             clearInterval(this.timer);
             this.completed = true;
             document.getElementById(this.display).textContent = "🎉 Session Complete!";
-            window.api.sendNotification("Session Complete", "Great job on your focus session!");
+            window.api.sendNotification("🎉 Session Complete", "Great job on your focus session!");
             this.sendSessionData();
             window.api.stopTracking();
         }
@@ -325,7 +325,7 @@
                 } else{
                     sessionConclusion.innerHTML = `Your final score: ${result.score}<br>Uh oh... looks like someone failed to keep their promise...`;
                 }
-                
+            document.getElementById('procrastination-label').innerText = ``;
                 return result;
             } catch (error) {
                 console.error('Error sending score data:', error);
@@ -413,16 +413,16 @@
         }
     });
 
-    document.getElementById('softstop').addEventListener('click', () => {
-        timer.softStop();
-    });
+    //document.getElementById('softstop').addEventListener('click', () => {
+       // timer.softStop();
+    //});
 
     // Handle window activity data
     window.api.onWindowData((data) => {
         if (!data?.owner?.name) return;
         
         const appName = data.owner.name;
-        document.getElementById('procrastination-label').innerText = `Now commiting: ${appName}`;
+        document.getElementById('procrastination-label').innerText = `Now committing: ${appName}`;
         activityLog[appName] = activityLog[appName] || [];
         
         activityLog[appName].push({
