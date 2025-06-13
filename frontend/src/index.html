@@ -1,270 +1,469 @@
-<!--Use active-win system for tracking current tabs-->
-
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Procrastination Detector</title>
-  </head>
-  <body>
-    <h1>Hello, Procrastinator!</h1>
-    <p>Focus detected soon...</p>
-    <p>Name your current task: </p>
+<head>
+  <title>Procrastination Detector</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 800px;
+      height: 600px;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('backgroundsecond.png') no-repeat center center fixed;
+      background-size: cover;
+      overflow: hidden;
+      color: #333;
+      font-size: 1rem;
+    }
 
-    <div id="settings-display"></div>
-    <br>
+    .container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
 
-    <button id="start">Start Tracking</button>
-    <button id="stop">Stop Tracking</button>
-    <button id="softstop">Debug soft stop</button>
-    <pre id="timer"></pre>
-    <pre id="output"></pre>
-    <pre id="procrastination-label"></pre>
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 15px;
+      gap: 10px;
+    }
 
-    <pre id="session-conclusion"></div>
+    .left-section {
+      width: 36%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 60px;
+    }
+
+    .right-section {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      background-color: rgba(255, 255, 255, 0);
+      margin-top:120px;
+      margin-bottom: 120px;
+      padding: 30px;
+      border-radius: 8px;
+      overflow-y: auto;
+      gap: 6px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 5px 100px 5px;
+      text-align: center;
+      box-sizing:border-box ;
+    }
+
+    #timer, #timerLabel {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 5px 0 10px 0;
+    }
+    #timerLabel{
+        font-size:1.2rem;
+    }
+
+    .button-row {
+      display: flex;
+      flex-direction: column;
+      width: 85%;
+      align-items: center;
+    }
+
+    .button-pair {
+      display: flex;
+      gap: 6px;
+      width: 90%;
+      justify-content: center;
+    }
+
+    .button-pair button,
+    #softstop, #home {
+      flex: 1;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 5px;
+      background: #541ad1;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+      transition: transform 0.15s ease;
+    }
+
+    button:hover {
+      transform: scale(1.04);
+    }
+    #home{
+        margin-top : 10px;
+    }
+    #softstop {
+      width: 90%;
+    }
+
+    #settingsDiv {
+      display: flex;
+        flex-direction: column;
+        align-items: center;
+      font-size: 0.8rem;
+      line-height: 0.7;
+      padding: 6px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 6px;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    pre {
+      background: rgba(255,255,255,0.8);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      overflow: auto;
+    }
+
+    #activity-log {
+      background: rgba(240, 240, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 0.85rem;
+      max-height: 20px;
+      overflow-y: auto;
+    }
+
+    .footer {
+      height: 50px;
+      background: #949395;
+      color: #fff;
+      font-size: 0.9rem;
+      text-align: center;
+      padding-top: 10px;
+      border-top: 1px solid #000;
+    }
+    p > #settingsDiv, h3 >#settingsDiv{
+        margin : 0px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main">
+      <div class="left-section">
+        <h1>Hello, Procrastinator!</h1>
+        <div class="button-row">
+          <div id="timer">--:--</div>
+          <div id="timerLabel">--:--</div>
+          <div class="button-pair">
+            <button id="start">Start</button>
+            <button id = "softstop">Stop</button>
+          </div>
+         <button id="stop" style="display:none">Stop</button>
+          <button id="home" onclick="if (confirm('Are you sure to go Home')) {window.location.href = 'setup.html';}">Home</button>
+        </div>
+      </div>
+      <div class="right-section">
+        <div id="settingsDiv">Loading settings...</div>
+        <pre id="procrastination-label"></pre>
+        <pre id="output"></pre>
+        <pre id="session-conclusion"></pre>
+        <div id="activity-log"><strong>Activity Log:</strong><br/></div>
+        <audio id="focus-audio" src="assets/test.mp3" preload="auto"></audio>
+        <audio id="start-stop-audio" src="assets/start_stop.mp3" preload="auto"></audio>
+      </div>
+    </div>
+    <div class="footer">
+      <strong>Window Focus:</strong> <span id="current-window">Waiting...</span>
+    </div>
+  </div>
+
+  <!-- JS remains the same -->
+</body>
+</html>
+
+
+  <script>
+    let mainTask = null;
+    let focusSettings = null;
+    let whitelist = null;
+    let isLoaded = false;
+    let focusTime;
+    let breakTime;
+    let focusIntervals;
+    let wasProcrastinate = false;
+    const focusAudio = document.getElementById('focus-audio');
+    const start_stopAudio = document.getElementById('start-stop-audio');
+    let timer = null;
     
-    <audio id="focus-audio" src="assets/test.mp3" preload="auto"></audio>
-    <script>
+    let score = null;
+    let log_details = null;
+    let recommendations = null;
+    let activityLog = {};
+    let activityLogs = []; // Dictionary to store activity by app name /// IS ACTUALLY ARRAY??
 
-        let mainTask = null;
-        let focusSettings = null;
-        let whitelist = null;
-        let isLoaded = false;
-        let focusTime;
-        let breakTime;
-        let focusIntervals;
-        let wasProcrastinate = false;
-        const focusAudio = document.getElementById('focus-audio');
+    // Enhanced Timer Class
+    class FocusBreakTimer {
+        constructor(focusTimeMinutes, breakTimeMinutes, intervals, display) {
+            this.focusTime = focusTimeMinutes * 60; // convert to seconds
+            this.breakTime = breakTimeMinutes * 60;
+            this.totalIntervals = intervals;
+            this.display = display;
+            this.currentInterval = 0;
+            this.isFocus = true;
+            this.timeLeft = this.focusTime;
+            this.timer = null;
+            this.completed = false;
+        }
 
-        let score = null;
-        let log_details = null;
-        let recommendations = null;
-
-        // Clock
-        class FocusBreakTimer {
-            constructor(focusTimeMinutes, breakTimeMinutes, intervals, display) {
-                this.focusTime = focusTimeMinutes * 60; // convert to seconds
-                this.breakTime = breakTimeMinutes * 60;
-                this.totalIntervals = (intervals);
-                this.display = display;
-                this.currentInterval = 0;
-                this.isFocus = true;
-                this.timeLeft = this.focusTime;
-                this.timer = null;
-            }
-
-            // Checks whether ticks have exceeded intervals
-            start() {
-                if (this.currentInterval >= this.totalIntervals) {
-                    console.log("✅ All intervals completed.");
-                    document.getElementById(this.display).textContent = ("✅ All intervals completed.");
-                    return;
-                }
-                console.log(`🔁 Starting interval ${this.currentInterval + 1}/${this.totalIntervals}`);
-                document.getElementById(this.display).textContent = (`🔁 Starting interval ${this.currentInterval + 1}/${this.totalIntervals}`);
-                this.timeLeft = this.isFocus ? this.focusTime : this.breakTime;
-                this.timer = setInterval(() => {
-                this.tick();
-                }, 1000);
-            }
-
-            // Ticks down and switches between corresponding phases when timer reaches zero
-            tick() {
-                const minutes = Math.floor(this.timeLeft / 60);
-                const seconds = this.timeLeft % 60;
-                const label = this.isFocus ? "🧠 Focus Time" : "☕ Break Time";
-                console.log(`${label} : ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-                document.getElementById(this.display).textContent = `${label} Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                this.timeLeft--;
-                if (this.timeLeft < 0) {
-                    clearInterval(this.timer);
-                    if (!this.isFocus) {
-                        this.currentInterval++;
-                    }
-                    this.isFocus = !this.isFocus;
-                    if (this.currentInterval < this.totalIntervals) {
-                        this.start(); // start the next phase
-                    } else {
-                        console.log("🎉 All intervals complete!");
-                        document.getElementById(this.display).textContent = "🎉 All intervals complete!";
-
-                        // Sends score
-                        this.sendScore();
-                    }
-                }
-            }
-
-            // Debug option to hasten the time to its end.
-            softStop() {
-                this.currentInterval = this.totalIntervals;
-                this.timeLeft = 1;
-                console.log("⏹️ Soft Stop initiated.");
-                this.sendScore();
-            }
-          
-            hardStop() {
-                clearInterval(this.timer);
-                console.log("⏹️ Timer stopped manually.");
-                document.getElementById(this.display).textContent = "⏹️ Timer stopped manually.";
-            }
+        start() {
+            if (this.completed) return;
             
-            // Gets score from backend
-            async sendScore(){
-                let result_data;
-                try {
-                    const formattedData = Object.values(activityLog).flat().map(entry => ({
-                    procrastinating: entry.procrastinating,
-                    site: entry.site
-                }));
-
-                    console.log("formattedData", formattedData);
-                    const response = await fetch("http://localhost:8000/score", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ data: formattedData })
-                    });
-                    const result = await response.json();
-                    result_data = {
-                        "focus_length": focusTimeMinutes,
-                        ...result.details
-                    }
-                    console.log("🎯 Score result:", result);
-                    document.getElementById("procrastination-label").textContent += `\nFinal Score: ${result.score}`;
-
-                } catch (err) {
-                    console.error("Error sending score data:", err);
-                }
-
-                try {
-
-                    console.log("Entering adapt:", result_data);
-                    const adaptResponse = await fetch("http://localhost:8000/adapt", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ data: result_data.details })
-                    });
-
-                    const adaptResult = await adaptResponse.json();
-                    const recommendations = adaptResult.recommendations || ["No recommendations for now!"];
-                    const conclusionDiv = document.getElementById("session-conclusion");
-                    print(recommendations);
-                    conclusionDiv.innerHTML = "<strong>Recommendations:</strong><ul>" + 
-                    recommendations.map(item => `<li>${item}</li>`).join("") +
-                    "</ul>";
-
-                } catch (err) {
-                    console.error("Error getting recommendations:", err);
-                }
-        }
-        // Get settings
-        // TODO: only load other processes once settings are received
-        async function displaySettings() {
-            const settingsDiv = document.getElementById('settings-display');
-
-            try {
-                console.log("Calling getSetupData...");
-                const data = await window.api.getSetupData();
-                console.log("Setting data received:", data);
-                
-                // Gets data normally
-                if (data) {
-                    mainTask = data.activity;
-                    focusSettings = data.focusPeriod;
-                    whitelist = data.whitelist;
-                    focusTime = focusSettings.focus_length;
-                    breakTime = focusSettings.break_length;
-                    focusIntervals = focusSettings.interval;
-                    
-                    settingsDiv.innerHTML = `
-                        <h3>Current Settings</h3>
-                        <p>Activity: ${mainTask}</p>
-                        <p>Focus: ${focusTime} mins</p>
-                        <p>Break: ${breakTime} mins</p>
-                        <p>Whitelisted Sites: ${whitelist.join(', ')}</p>
-                    `;
-
-                    isLoaded = true;
-                    timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
-                } else {
-                    // Saves in settings-id
-                    settingsDiv.innerHTML = '<p>No settings saved yet</p>';
-                }}
-            catch (err) {
-                settingsDiv.innerHTML = '<p>Error loading settings</p>';
-                console.error(err);
-                }
-        }
-        
-      // Event listener
-        window.addEventListener('DOMContentLoaded', displaySettings);
-
-        const output = document.getElementById('output');
-        const procrastinationLabel = document.getElementById('procrastination-label');
-        const activityLog = {}; // Dictionary to store activity by app name
-
-        // Start tracking clicked
-        document.getElementById('start').onclick = async () => {
-            const taskInput = mainTask;
-            if (!taskInput) {
-                alert("Please enter your current task before starting tracking.");
+            if (this.currentInterval >= this.totalIntervals) {
+                this.completeSession();
                 return;
             }
-            window.api.startTracking(taskInput);
-            timer.start();
-            output.textContent = 'Started tracking...';
-        };
-        
-        // Stop tracking clicked
-        document.getElementById('stop').onclick = () => {
-            window.api.stopTracking();
-            output.textContent = 'Stopped tracking.';
-            timer.hardStop();
-        };
 
-        document.getElementById('softstop').onclick = () => {
-            window.api.stopTracking();
-            timer.softStop();
-        }
-        
-        async function gemini_changeApiInterval(time){ // time in miliseconds
-            window.api.gemini_changeApiInterval(time);
-            console.log("Gemini API interval changed. Now set to", time);
-        }
-        window.api.onWindowData(async (data) => {
-            if (!data || !data.owner || !data.owner.name) return;
-
-            const appName = data.owner.name;
-            console.log(data.owner);
-            if (!activityLog[appName]) {
-                activityLog[appName] = [];
+            this.timeLeft = this.isFocus ? this.focusTime : this.breakTime;
+            this.updateDisplay();
+            
+            this.timer = setInterval(() => this.tick(), 1000);
+            
+            // Start/stop tracking based on phase
+            if (this.isFocus) {
+                window.api.startTracking(mainTask);
+                window.api.sendNotification("🧠 Focus Time Started", `Let's focus on: ${mainTask}`);
+            } else {
+                window.api.stopTracking();
+                window.api.sendNotification("☕ Break Time Started", "Time to relax!");
             }
+            this.playBreakAlarm();
+        }
 
-            activityLog[appName].push({
-                site: appName,
-                procrastinating: procrastinating
+        tick() {
+            this.timeLeft--;
+            this.updateDisplay();
 
-            });
+            if (this.timeLeft <= 0) {
+                clearInterval(this.timer);
+                this.switchPhase();
+            }
+        }
 
-            output.textContent = JSON.stringify({ site: appName, procrastinating }, null, 2);
-        });
-        window.api.onBackendResult((analysis) => {
-            console.log(analysis);
-            if (analysis.isProcrastinating){
-                if (!wasProcrastinate){
-                    focusAudio.play().catch(err => {
-                        console.error("Failed to load audio");
-                    });
+        switchPhase() {
+            if (!this.isFocus) {
+                this.currentInterval++;
+            }
+            this.isFocus = !this.isFocus;
+            
+            if (this.currentInterval < this.totalIntervals) {
+                this.start();
+            } else {
+                this.completeSession();
+            }
+        }
+
+        updateDisplay() {
+            const minutes = Math.floor(this.timeLeft / 60);
+            const seconds = this.timeLeft % 60;
+            const label = this.isFocus ? "🧠 Focus Time" : "☕ Break Time";
+            const intervalInfo = `(${this.currentInterval + 1}/${this.totalIntervals})`;
+            
+            document.getElementById(this.display).textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById("timerLabel").textContent = `${label} ${intervalInfo}:`;
+        }
+
+        playBreakAlarm() {
+            start_stopAudio.play().catch(err => console.error("Start Stop play error:", err));
+        }
+
+        completeSession() {
+            clearInterval(this.timer);
+            this.completed = true;
+            document.getElementById(this.display).textContent = "🎉 Session Complete!";
+            window.api.sendNotification("🎉 Session Complete", "Great job on your focus session!");
+            this.sendSessionData();
+            window.api.stopTracking();
+        }
+
+        async sendSessionData() {
+            try {
+                // Prepare the data in the required format
+                const scoreData = {
+                data: activityLogs.map(entry => ({
+                    procrastinating: entry.procrastinating,
+                    site: entry.site,
+                    geminiScore : entry.geminiScore
+                }))
+                };
+
+                // Send to FastAPI endpoint
+                const response = await fetch('http://localhost:8000/score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scoreData)
+                });
+
+                if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            }else{
-                wasProcrastinate = false;
+
+                const result = await response.json();
+                const sessionConclusion = document.getElementById("session-conclusion");
+                console.log('Score calculation result:', result);
+                if (result.score > 80){
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Congratulations! That was truly a productive session 🎊`;
+                }
+                else if (result.score > 60){
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>🎉 Good work! Practice makes perfect`;
+                } else{
+                    sessionConclusion.innerHTML = `Your final score: ${result.score}<br>Uh oh... looks like someone failed to keep their promise...`;
+                }
+            document.getElementById('procrastination-label').innerText = ``;
+                return result;
+            } catch (error) {
+                console.error('Error sending score data:', error);
+                throw error;
             }
-            procrastinationLabel.textContent = analysis.isProcrastinating
-                ? `Procrastinating (score: ${analysis.score.toFixed(2)})`
-                : `Productive (score: ${analysis.score.toFixed(2)})`;
+        }
+
+        displayResults(result) {
+            const scoreElement = document.getElementById("procrastination-label");
+            const conclusionDiv = document.getElementById("session-conclusion");
+            
+            if (result.score !== undefined) {
+                scoreElement.textContent = `Final Score: ${result.score.toFixed(2)}`;
+            }
+            
+            if (result.recommendations) {
+                conclusionDiv.innerHTML = `
+                    <strong>Recommendations:</strong>
+                    <ul>${result.recommendations.map(item => `<li>${item}</li>`).join('')}</ul>
+                `;
+            }
+        }
+
+        softStop() {
+            this.currentInterval = this.totalIntervals - 1;
+            this.timeLeft = 1;
+            console.log("⏹️ Soft Stop initiated");
+            window.api.stopTracking();
+        }
+
+        hardStop() {
+            clearInterval(this.timer);
+            this.completed = true;
+            document.getElementById(this.display).textContent = "⏹️ Session Stopped";
+            docuemnt.getElementById('procrastination-label').innerText = "";
+            window.api.stopTracking();
+        }
+    }
+
+    // Load settings from main process
+    async function displaySettings() {
+        try {
+            const data = await window.api.getSetupData();
+            const settingsDiv = document.getElementById('settingsDiv');
+            
+            if (data) {
+                mainTask = data.activity;
+                focusSettings = data.focusPeriod;
+                whitelist = data.whitelist || [];
+                focusTime = focusSettings.focus_length;
+                breakTime = focusSettings.break_length;
+                focusIntervals = focusSettings.interval;
+                
+                settingsDiv.innerHTML = `
+                    <h3>Current Settings</h3>
+                    <p>Activity: ${mainTask}</p>
+                    <p>Focus: ${focusTime} mins</p>
+                    <p>Break: ${breakTime} mins</p>
+                    <p>Intervals: ${focusIntervals}</p>
+                    <p>Whitelisted: ${whitelist.join(', ') || 'None'}</p>
+                `;
+
+                isLoaded = true;
+                timer = new FocusBreakTimer(focusTime, breakTime, focusIntervals, "timer");
+            } else {
+                settingsDiv.innerHTML = '<p>No settings saved yet</p>';
+            }
+        } catch (err) {
+            console.error("Error loading settings:", err);
+        }
+    }
+
+   // Event Listeners
+    document.getElementById('start').addEventListener('click', () => {
+        if (!mainTask) {
+            alert("Please configure your settings first");
+            return;
+        }
+        timer.start();
+    });
+
+    document.getElementById('stop').addEventListener('click', () => {
+        if (confirm("Are you sure you want to stop the current session?")) {
+            timer.hardStop();
+        }
+    });
+
+    document.getElementById('softstop').addEventListener('click', () => {
+        timer.softStop();
+    });
+
+    // Handle window activity data
+    window.api.onWindowData((data) => {
+        if (!data?.owner?.name) return;
+        
+        const appName = data.owner.name;
+        document.getElementById('procrastination-label').innerText = `Now committing: ${appName}`;
+        activityLog[appName] = activityLog[appName] || [];
+        
+        activityLog[appName].push({
+            site: appName,
+            timestamp: new Date().toISOString(),
+            procrastinating: data.procrastinating
         });
+
+        console.log(activityLog);
+    });
+    window.api.playAlertSound((value) => {
+        focusAudio.play();
+    });
+    // Handle backend analysis results
+    window.api.onBackendResult((analysis) => {
+        const labelElement = document.getElementById("procrastination-label");
+        
+        if (analysis.isProcrastinating) {
+            if (!wasProcrastinate) {
+                focusAudio.play().catch(console.error);
+                wasProcrastinate = true;
+            }
+            labelElement.innerHTML = `Bro is NOT that serious 😔<br>Procrastinating (score: ${analysis.score.toFixed(2)})`;
+        } else {
+            wasProcrastinate = false;
+            labelElement.innerHTML = `Now Commiting: ${analysis.current_window}!<br>Productive (score: ${analysis.score.toFixed(2)})`;
+        }
+        activityLogs.push({
+            procrastinating: analysis.isProcrastinating,
+            site: analysis.current_window,
+            geminiScore: analysis.score
+        });
+        console.log(activityLogs);
+    });
+
+    // Initialize when DOM loads
+    window.addEventListener('DOMContentLoaded', displaySettings);
+        
         
     </script>
   </body>
