@@ -223,17 +223,6 @@
 
   <script>
     const { ipcRenderer } = window.api || require('electron').ipcRenderer;
-    window.onload = () => {
-      const splash = document.getElementById('splash');
-      const form = document.getElementById('setupForm');
-
-      setTimeout(() => {
-        splash.classList.add('fade-out');
-        setTimeout(() => {
-          form.style.display = 'flex';
-        }, 1500);
-      }, 3000);
-    };
 
     document.getElementById('setupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -249,24 +238,38 @@
         return;
       }
 
+      // Focus period
       const focusPeriod = {
-        focus_length: workTime,
-        break_length: restTime || 0,
-        interval: intervals || 0
-      };
+        focus_length: workTime, 
+        break_length: restTime ? restTime : 0,
+        interval: intervals ? intervals : 0 
+      }
 
+      // Whitelisted websites
       const whitelist = whitelistRaw
         ? whitelistRaw.split('\n').map(site => site.trim()).filter(Boolean)
         : [];
 
       try {
-        await window.api.saveSetupData({ focusPeriod, activity, whitelist });
-        console.log("DEBUG saveSetupData success!");
-        window.api.loadMainWindow();
+          await window.api.saveSetupData({ focusPeriod, activity, whitelist });
+          console.log("DEBUG saveSetupData success!")
+          window.api.loadMainWindow();
       } catch (err) {
-        alert('Error saving data: ' + err.message);
-      }
+          alert('Error saving data: ' + err.message);
+      };
     });
+    window.onload = () => {
+      const splash = document.getElementById('splash');
+      const form = document.getElementById('setupForm');
+
+      setTimeout(() => {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+          form.style.display = 'flex';
+        }, 1500);
+      }, 3000);
+    };
+
   </script>
 </body>
 </html>

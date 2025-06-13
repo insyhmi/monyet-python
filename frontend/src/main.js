@@ -13,7 +13,7 @@ let setupData = null;
 let intervalId;
 let user_task = "";
 let wasProcrastinating = false;
-let gemini_apiCallInterval = 10000 //ms 
+let gemini_apiCallInterval = 20000 //ms 
 let trackingActive = false;
 let stopTracking = false;
 let cameraWorker = null;
