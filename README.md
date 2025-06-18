@@ -16,6 +16,7 @@ pip install tensorflow opencv-python cvlib
 To run, ```frontend``` and ```backend``` must be active. <br>
 - in the directory, ```cd frontend```, then run ```npm start```
 - on a separate terminal, in the directory, ```cd backend``` then run ```uvicorn main:app --reload```
+- at the root, create file ```.env``` and add ```GEMINI_API_KEY=[your gemini api key]```
 <br>
 Internet connection must be available to access Gemini AI services. <br>
 By running this app, you agree to share essential datas to Gemini AI services to rate your current task.<br>
