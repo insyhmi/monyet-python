@@ -1,0 +1,6 @@
+fastapi
+pydantic
+dotenv
+numpy
+cv2
+google.generativeai
